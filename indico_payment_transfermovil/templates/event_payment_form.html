@@ -1,0 +1,18 @@
+<dl class="i-data-list">
+  <dt>{% trans %}First name{% endtrans %}</dt>
+  <dd>{{ registration.first_name }}</dd>
+  <dt>{% trans %}Last name{% endtrans %}</dt>
+  <dd>{{ registration.last_name }}</dd>
+  <dt>{% trans %}Total amount{% endtrans %}</dt>
+  <dd>{{ format_currency(amount, currency, locale=session.lang) }}</dd>
+  <dt></dt>
+  <dd>
+    <form action="{{ settings.url }}" method="POST">
+      <input type="hidden" name="amount" value="{{ amount }}">
+      <input type="hidden" name="charset" value="utf-8">
+      <input type="hidden" name="currency_code" value="{{ currency }}">
+      <input type="hidden" name="sourceid" value="{{ settings.source_id }}">
+      <input type="hidden" name="username" value="{{ settings.user_name }}">
+    </form>
+  </dd>
+</dl>

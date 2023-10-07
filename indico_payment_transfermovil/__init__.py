@@ -14,14 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with PaymentTransfermovil. If not, see <http://www.gnu.org/licenses/>.
 #
+from indico.util.i18n import make_bound_gettext
 
-from indico.core.plugins import IndicoPlugin
-
-class PaymentTransfermovil (IndicoPlugin):
-    """Transfermovil Payment Plugin
-
-    Provides a payment method using the Transfermovil API.
-    """
-
-    def init(self):
-        super (PaymentTransfermovil, self).init ()
+_ = make_bound_gettext ('payment_transfermovil')

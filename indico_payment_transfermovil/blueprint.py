@@ -14,6 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with PaymentTransfermovil. If not, see <http://www.gnu.org/licenses/>.
 #
-from setuptools import setup
+from indico.core.plugins import IndicoPluginBlueprint
 
-setup ()
+blueprint = IndicoPluginBlueprint ('payment_transfermovil', __name__)

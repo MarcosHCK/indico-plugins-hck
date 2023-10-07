@@ -17,8 +17,11 @@
 
 default all: pack transfer
 
-pack: setup.py $(shell find indico_payment_transfermovil -type f -name "*.py")
+pythons=$(shell find indico_plugin_payment_transfermovil -type f -name "*.py")
+templates=$(shell find indico_plugin_payment_transfermovil/templates -type f -name "*.html")
+
+pack: setup.py ${pythons} ${templates}
 	python setup.py sdist
 
 transfer: pack
-	pip install ./dist/indico_payment_transfermovil-0.0.1.tar.gz
+	pip install ./dist/indico-plugin-payment-transfermovil-0.0.1.tar.gz

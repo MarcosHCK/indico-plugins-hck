@@ -1,0 +1,2 @@
+graft indico_payment_transfermovil/templates
+global-exclude *.pyc __pycache__ .keep
