@@ -14,10 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with PaymentTransfermovil. If not, see <http://www.gnu.org/licenses/>.
 #
-from indico.core.plugins import IndicoPlugin, url_for_plugin
-from indico.modules.events.payment import (PaymentEventSettingsFormBase, PaymentPluginMixin, PaymentPluginSettingsFormBase)
 from indico_payment_transfermovil import _
 from indico_payment_transfermovil.blueprint import blueprint
+from indico.core.plugins import IndicoPlugin, url_for_plugin
+from indico.modules.events.payment import (PaymentEventSettingsFormBase, PaymentPluginMixin, PaymentPluginSettingsFormBase)
+from indico.util.string import remove_accents, str_to_ascii
 from wtforms.fields import StringField, URLField
 from wtforms.validators import DataRequired, Optional
 
@@ -48,3 +49,10 @@ class TransfermovilPaymentPlugin (PaymentPluginMixin, IndicoPlugin):
 
   def get_blueprints (self):
      return blueprint
+
+  def adjust_payment_form_data (self, data):
+    event = data ['event']
+    registration = data ['registration']
+
+    data ['notify_url'] = url_for_plugin ('payment_transfermovil.notify', registration.locator.uuid, _external = True)
+    data ['proceed_url'] = url_for_plugin ('payment_transfermovil.proceed', registration.locator.uuid, _external = True)

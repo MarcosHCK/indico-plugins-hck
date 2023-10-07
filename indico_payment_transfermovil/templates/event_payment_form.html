@@ -1,3 +1,5 @@
+{% from 'message_box.html' import message_box %}
+
 <dl class="i-data-list">
   <dt>{% trans %}First name{% endtrans %}</dt>
   <dd>{{ registration.first_name }}</dd>
@@ -6,13 +8,54 @@
   <dt>{% trans %}Total amount{% endtrans %}</dt>
   <dd>{{ format_currency(amount, currency, locale=session.lang) }}</dd>
   <dt></dt>
-  <dd>
-    <form action="{{ settings.url }}" method="POST">
-      <input type="hidden" name="amount" value="{{ amount }}">
-      <input type="hidden" name="charset" value="utf-8">
-      <input type="hidden" name="currency_code" value="{{ currency }}">
-      <input type="hidden" name="sourceid" value="{{ settings.source_id }}">
-      <input type="hidden" name="username" value="{{ settings.user_name }}">
-    </form>
+  <dd id="transfermovil-arena">
+    <script>
+      function transfermovil_query_qr ()
+        {
+          var arena_tag = $('#transfermovil-arena')
+          var erbox_tag = $('#transfermovil-error-box')
+          var ertex_tag = $('#transfermovil-error-box div.message-text')
+          var overlay = IndicoUI.Dialogs.Util.progress ()
+
+          erbox_tag.addClass ('hidden')
+
+          let body =
+            {
+              amount : {{ amount | tojson }},
+              currency : {{ currency | tojson }},
+            }
+
+          fetch ('{{ proceed_url }}',
+            {
+              body : JSON.stringify (body),
+              cache : 'no-cache',
+              method : 'POST',
+            })
+
+          .then (response =>
+            {
+              overlay ()
+
+              if (!response.ok)
+                {
+                  var pre0 = '{% trans %}Request error{% endtrans %}'
+                  var pre1 = ' ' + response.status
+                  var pre2 = ' ' + response.statusText
+
+                  erbox_tag.removeClass ('hidden')
+                  ertex_tag.text (pre0 + pre1 + pre2)
+
+                  console.log ('Request error ' + response.status + ' ' + response.statusText)
+                }
+            })
+          .then (text => arena_tag.innerHTML = text)
+        }
+    </script>
+
+    <button name="payment-button" onclick="transfermovil_query_qr ()">{% trans %}Query QR code{% endtrans %}</button>
+    </div>
   </dd>
 </dl>
+
+{% call message_box ('error', classes = 'hidden', id = 'transfermovil-error-box') %}
+{% endcall %}

@@ -14,13 +14,31 @@
 # You should have received a copy of the GNU General Public License
 # along with PaymentTransfermovil. If not, see <http://www.gnu.org/licenses/>.
 #
-from indico.core.plugins import IndicoPluginBlueprint
-from indico_payment_transfermovil.controllers import RHTransfermovilNotify, RHTransfermovilProceed
+from flask import flash, redirect, request
+from flask_pluginengine import render_plugin_template
+from indico.modules.events.registration.models.registrations import Registration
+from indico.web.flask.util import NotFound
+from indico.web.rh import RH
+from werkzeug.exceptions import BadRequest
 
-blueprint = IndicoPluginBlueprint (
-  'payment_transfermovil', __name__,
-  url_prefix = '/event/<int:event_id>/registrations/<int:reg_form_id>/payment/response/transfermovil'
-    )
+class RHTransfermovil (RH):
 
-blueprint.add_url_rule ('/notify', 'notify', RHTransfermovilNotify, methods = ('POST',))
-blueprint.add_url_rule ('/proceed', 'proceed', RHTransfermovilProceed, methods = ('POST',))
+  CSRF_ENABLED = False
+
+  def _process_args (self):
+    self.token = request.args ['token']
+    self.registration = Registration.query.filter_by (uuid = self.token).first ()
+
+    if not self.registration:
+      raise BadRequest
+
+
+class RHTransfermovilNotify (RHTransfermovil):
+
+  def _process (self):
+    NotFound ()
+
+class RHTransfermovilProceed (RHTransfermovil):
+
+  def _process (self):
+    NotFound ()
