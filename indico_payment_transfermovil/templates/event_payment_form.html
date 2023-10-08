@@ -1,4 +1,5 @@
 {% from 'message_box.html' import message_box %}
+{% trans %}Clicking in the{% endtrans %} <strong>{% trans %}Query QR code{% endtrans %}</strong> {% trans %}button will generate a Transfermovil payment QR{% endtrans %}
 
 <dl class="i-data-list">
   <dt>{% trans %}First name{% endtrans %}</dt>
@@ -19,15 +20,14 @@
 
           erbox_tag.addClass ('hidden')
 
-          let body =
-            {
-              amount : {{ amount | tojson }},
-              currency : {{ currency | tojson }},
-            }
-
           fetch ('{{ proceed_url }}',
             {
-              body : JSON.stringify (body),
+              body : JSON.stringify (
+                {
+                  amount : {{ amount | tojson }},
+                  currency : {{ currency | tojson }},
+                }),
+
               cache : 'no-cache',
               method : 'POST',
             })
@@ -47,8 +47,17 @@
 
                   console.log ('Request error ' + response.status + ' ' + response.statusText)
                 }
+              return response.json ()
             })
-          .then (text => arena_tag.innerHTML = text)
+
+          .then (json =>
+            {
+              var tag = $('<img></img>',
+                {
+                  src : 'data:image/svg+xml;base64,' + json.qr,
+                })
+              arena_tag.html (tag)
+            })
         }
     </script>
 

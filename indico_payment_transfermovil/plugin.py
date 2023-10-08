@@ -41,8 +41,8 @@ class TransfermovilPaymentPlugin (PaymentPluginMixin, IndicoPlugin):
   settings_form = PluginSettingsForm
   event_settings_form = EventSettingsForm
 
-  default_settings = { 'method_name' : 'Transfermovil', 'url' : '', 'user_name' : '', 'source_id' : '', }
-  default_event_settings = { 'method_name' : None, 'enabled' : False, 'user_name' : None, 'source_id' : None, }
+  default_settings = { 'method_name' : 'Transfermovil', 'source_id' : '', 'user_name' : '', 'url' : '', }
+  default_event_settings = { 'enabled' : False, 'method_name' : None, 'source_id' : None, 'user_name' : None, }
 
   def init (self):
     super ().init ()
