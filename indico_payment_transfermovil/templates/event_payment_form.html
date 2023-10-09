@@ -35,6 +35,9 @@
 
   <script>
 
+    const amount = {{ amount | tojson }}
+    const currency = {{ currency | tojson }}
+
     function transfermovil_cancel_qr ()
       {
         var arena_tag = $('#transfermovil-arena')
@@ -93,8 +96,8 @@
           {
             body : JSON.stringify (
               {
-                "amount" : {{ amount | tojson }},
-                "currency" : {{ currency | tojson }},
+                "amount" : amount,
+                "currency" : currency,
               }),
 
             cache : 'no-cache',

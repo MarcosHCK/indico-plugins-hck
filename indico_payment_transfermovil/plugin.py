@@ -55,3 +55,7 @@ class TransfermovilPaymentPlugin (PaymentPluginMixin, IndicoPlugin):
 
   def init (self):
     super ().init ()
+
+  @property
+  def logo_url (self):
+    return url_for_plugin ('payment_transfermovil.static', filename = 'images/logo.png')

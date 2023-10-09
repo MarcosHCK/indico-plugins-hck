@@ -14,144 +14,72 @@
 # You should have received a copy of the GNU General Public License
 # along with PaymentTransfermovil. If not, see <http://www.gnu.org/licenses/>.
 #
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from flask import flash, redirect, request
-from flask_pluginengine import current_plugin, render_plugin_template
+from flask import request
+from flask_pluginengine import current_plugin
+from indico_payment_transfermovil.rh import RHTransfermovilWithoutTransaction
+from indico_payment_transfermovil.rh import RHTransfermovilWithTransaction
+from indico_payment_transfermovil.utils import deserialize_password
+from indico_payment_transfermovil.utils import serialize_password
 from indico.core.plugins import url_for_plugin
 from indico.modules.events.payment.models.transactions import TransactionAction, TransactionStatus
-from indico.modules.events.payment.util import register_transaction
-from indico.modules.events.registration.models.registrations import Registration
-from indico.web.flask.util import NotFound
-from indico.web.rh import RH
 from io import BytesIO
 from qrcode.image import svg
 from werkzeug.exceptions import BadRequest, InternalServerError
-import base64, os, qrcode, requests, time
+import base64, qrcode, requests
 
-def _deserialize_password (password : str) -> bytes:
-  return base64.b64decode (password.encode ('utf-8'))
-
-def _serialize_password (password : bytes) -> str:
-  return base64.b64encode (password).decode ('utf-8')
-
-class RHTransfermovil (RH):
-
-  CSRF_ENABLED = False
-
-  def _check_nonce (self, salt, nonce):
-    pswd = self._gen_noce_password ()
-    algo = PBKDF2HMAC (algorithm = hashes.SHA256 (), length = 128, salt = salt, iterations = 480000)
-    return algo.verify (pswd, nonce)
-
-  def _is_duplicated (self):
-    transaction = self.registration.transaction
-    return (not not transaction) and (transaction.provider == 'transfermovil') and (transaction.status != TransactionStatus.rejected)
-
-  def _gen_nonce (self, salt):
-    pswd = self._gen_noce_password ()
-    algo = PBKDF2HMAC (algorithm = hashes.SHA256 (), length = 128, salt = salt, iterations = 480000)
-    return algo.derive (pswd)
-
-  def _gen_noce_password (self):
-    sourceid = self._get_source_id ()
-    username = self._get_user_name ()
-
-    password = '{0}-{1}-{2}'.format (sourceid, username, self.token)
-    return password.encode ('utf-8')
-
-  def _get_source_id (self):
-    if (current_plugin.event_settings.get (self.registration.registration_form.event, 'source_id') == None):
-      return current_plugin.settings.get ('source_id')
-    else:
-      return current_plugin.event_settings.get (self.registration.registration_form.event, 'source_id')
-
-  def _get_url (self):
-    return current_plugin.settings.get ('url')
-
-  def _get_user_name (self):
-    if (current_plugin.event_settings.get (self.registration.registration_form.event, 'user_name') == None):
-      return current_plugin.settings.get ('user_name')
-    else:
-      return current_plugin.event_settings.get (self.registration.registration_form.event, 'user_name')
-
-  def _process_args (self):
-    self.token = request.args ['token']
-    self.registration = Registration.query.filter_by (uuid = self.token).first ()
-
-    if (not self.registration):
-      raise BadRequest ()
-
-  def _register (self, action, data):
-
-    register_transaction (
-      action = action,
-      amount = self.amount,
-      currency = self.currency,
-      data = data,
-      provider = 'transfermovil',
-      registration = self.registration)
-
-class RHTransfermovilTransaction (RHTransfermovil):
-
-  def _is_duplicated (self):
-    transaction = self.registration.transaction
-    return super ()._is_duplicated () and (transaction.status != TransactionStatus.pending)
-
-  def _process_args (self):
-    super ()._process_args ()
-
-    if (not self.registration.transaction):
-      raise BadRequest ()
-    else:
-
-      self.amount = self.registration.transaction.amount
-      self.currency = self.registration.transaction.currency
-
-class RHTransfermovilCancel (RHTransfermovilTransaction):
+class RHTransfermovilCancel (RHTransfermovilWithTransaction):
 
   def _process (self):
-    if (self._is_duplicated ()):
-      current_plugin.logger.info ("Payment not recorded because transaction was duplicated\nData received: %s",
-                                    request.json)
+
+    if (not self._has_transaction ()):
+      current_plugin.logger.info ("Payment not recorded because transaction was not valid")
       raise BadRequest ()
     else:
 
       self._register (TransactionAction.reject, {})
 
-class RHTransfermovilNotify (RHTransfermovilTransaction):
+class RHTransfermovilNotify (RHTransfermovilWithTransaction):
 
   def _process (self):
 
-    if (self._is_duplicated ()):
-      current_plugin.logger.info ("Payment not recorded because transaction was duplicated\nData received: %s",
-                                    request.json)
+    if (not self._has_transaction ()):
+      current_plugin.logger.info ("Payment not recorded because transaction was not valid")
       raise BadRequest ()
     else:
 
-      if (not request.headers.has_key ('password')):
+      if (not request.headers.get ('password')):
+        current_plugin.logger.info ("Payment not recorded because transaction did not sent password header field")
         raise BadRequest ()
       if (int (request.headers.get ('source')) != self._get_source_id ()):
+        current_plugin.logger.info ("Payment not recorded because transaction did not sent source header field")
         raise BadRequest ()
       if (str (request.headers.get ('username')) != self._get_user_name ()):
+        current_plugin.logger.info ("Payment not recorded because transaction did not sent username header field")
         raise BadRequest ()
 
       notify = request.json
 
-      if (notify.get ('ExternalId') != self.token):
+      if (notify.get ('ExternalId') != self._gen_external_id ()):
+        current_plugin.logger.info ("Payment not recorded because transaction did not sent ExternalId POST field")
         raise BadRequest ()
       if (notify.get ('Source') != self._get_source_id ()):
+        current_plugin.logger.info ("Payment not recorded because transaction did not sent Source POST field")
         raise BadRequest ()
 
-      nonce = request.headers.get ('password')
       transaction = self.registration.transaction
 
-      if (not self._check_nonce (transaction.data ['salt'], nonce)):
+      salt = deserialize_password (transaction.data ['salt'])
+      nonce = deserialize_password (request.headers.get ('password'))
+
+      if (not self._check_nonce (salt, nonce)):
+        current_plugin.logger.info ("Payment not recorded because transaction password is invalid")
+        print ("Payment not recorded because transaction password is invalid")
         raise BadRequest ()
 
       data = {
-          'Bank' : notify.get ('Bank'),
           'bank_id' : notify.get ('BankId'),
+          'bank' : notify.get ('Bank'),
+          'order_id' : transaction.data ['order_id'],
           'phone' : notify.get ('Phone'),
           'tm_id' : notify.get ('TmId'),
         }
@@ -159,19 +87,19 @@ class RHTransfermovilNotify (RHTransfermovilTransaction):
       self._register (TransactionAction.complete, data)
       return { "Success" : True, "Resultmsg" : "OK", "Status" : 1, }
 
-class RHTransfermovilProceed (RHTransfermovil):
+class RHTransfermovilProceed (RHTransfermovilWithoutTransaction):
 
   def _process (self):
 
-    if (self._is_duplicated ()):
-      current_plugin.logger.info ("Payment not recorded because transaction was duplicated\nData received: %s",
-                                       request.json)
+    if (not self._has_not_transaction ()):
+      current_plugin.logger.info ("Payment not recorded because transaction was not valid")
       raise BadRequest ()
     else:
 
-      salt = os.urandom (16)
+      salt = self._gen_nonce_salt ()
       nonce = self._gen_nonce (salt)
 
+      external_id = self._gen_external_id ()
       notify_url = url_for_plugin ('payment_transfermovil.notify', self.registration.locator.uuid, _external = True)
 
       body = {
@@ -179,7 +107,7 @@ class RHTransfermovilProceed (RHTransfermovil):
               'Amount' : self.amount,
               'Currency' : self.currency,
               'Description' : "Indico Event Payment",
-              'ExternalId' : self.token,
+              'ExternalId' : external_id,
               'Source' : self._get_source_id (),
               'UrlResponse' : notify_url,
               'ValidTime' : 60 * (10),
@@ -187,7 +115,7 @@ class RHTransfermovilProceed (RHTransfermovil):
         }
 
       headers = {
-          'password' : _serialize_password (nonce),
+          'password' : serialize_password (nonce),
           'source' : str (self._get_source_id ()),
           'username' : self._get_user_name (),
         }
@@ -206,13 +134,14 @@ class RHTransfermovilProceed (RHTransfermovil):
           raise InternalServerError ()
         else:
 
-          self._register (TransactionAction.pending, { 'order_id' : response.get ('OrderId'), 'salt' : _serialize_password (salt), })
+          self._register (TransactionAction.pending, { 'order_id' : response.get ('OrderId'), 'salt' : serialize_password (salt), })
 
-          json = '{{ "id_transaccion" : "{id}", "importe" : {amount}, "moneda" : {currency}, "numero_proveedor" : {source_id}, "version" : 1, }}'
-          json = json.format (amount = self.amount, currency = self.currency, id = response.get ('OrderId'), source_id = self._get_source_id ())
+          json = '{{ "id_transaccion" : "{id}", "importe" : {amount}, "moneda" : {currency}, "numero_proveedor" : {source_id}, "version" : 1 }}'
+          json = json.format (amount = self.amount, currency = self.currency, id = external_id, source_id = self._get_source_id ())
 
           stream = BytesIO ()
-          qr = qrcode.make (json, image_factory = qrcode.image.svg.SvgImage)
+          qr = qrcode.make (json, image_factory = qrcode.image.svg.SvgPathImage)
+
           qr.save (stream)
 
           return { "qr" : base64.b64encode (stream.getvalue ()).decode (), }
