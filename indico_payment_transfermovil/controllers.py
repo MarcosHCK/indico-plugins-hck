@@ -79,7 +79,7 @@ class RHTransfermovil (RH):
     self.token = request.args ['token']
     self.registration = Registration.query.filter_by (uuid = self.token).first ()
 
-    if not self.registration:
+    if (not self.registration):
       raise BadRequest ()
 
   def _register (self, action, data):
@@ -103,6 +103,9 @@ class RHTransfermovilTransaction (RHTransfermovil):
     self.amount = self.registration.transaction.amount
     self.currency = self.registration.transaction.currency
 
+    if (not self.registration.transaction):
+      raise BadRequest ()
+
 class RHTransfermovilCancel (RHTransfermovilTransaction):
 
   def _process (self):
@@ -117,6 +120,7 @@ class RHTransfermovilCancel (RHTransfermovilTransaction):
 class RHTransfermovilNotify (RHTransfermovilTransaction):
 
   def _process (self):
+
     if (self._is_duplicated ()):
       current_plugin.logger.info("Payment not recorded because transaction was duplicated\nData received: %s",
                                     request.json)
@@ -125,9 +129,9 @@ class RHTransfermovilNotify (RHTransfermovilTransaction):
 
       if (not request.headers.has_key ('password')):
         raise BadRequest ()
-      if (request.headers.get ('source') != self._get_source_id ()):
+      if (int (request.headers.get ('source')) != self._get_source_id ()):
         raise BadRequest ()
-      if (request.headers.get ('username') != self._get_user_name ()):
+      if (str (request.headers.get ('username')) != self._get_user_name ()):
         raise BadRequest ()
 
       notify = request.json
@@ -182,7 +186,7 @@ class RHTransfermovilProceed (RHTransfermovil):
 
       headers = {
           'password' : _serialize_password (nonce),
-          'source' : self._get_source_id (),
+          'source' : str (self._get_source_id ()),
           'username' : self._get_user_name (),
         }
 

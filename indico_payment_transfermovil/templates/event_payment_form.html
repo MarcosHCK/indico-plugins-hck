@@ -48,14 +48,13 @@
 
                 if (!response.ok)
                   {
-                    var pre0 = '{% trans %}Request error{% endtrans %}'
-                    var pre1 = ' ' + response.status
-                    var pre2 = ' ' + response.statusText
+                    var message = '{% trans %}Request error{% endtrans %}'
+                                + ' ' + response.status
+                                + ' ' + response.statusText
 
                     erbox_tag.removeClass ('hidden')
-                    ertex_tag.text (pre0 + pre1 + pre2)
-
-                    console.log ('Request error ' + response.status + ' ' + response.statusText)
+                    ertex_tag.text (message)
+                    throw new Error (message)
                   }
                 return response.json ()
               })
