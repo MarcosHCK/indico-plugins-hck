@@ -46,7 +46,7 @@ class RHTransfermovil (RH):
 
   def _is_duplicated (self):
     transaction = self.registration.transaction
-    return (not not transaction) and (transaction.provider == 'transfermovil')
+    return (not not transaction) and (transaction.provider == 'transfermovil') and (transaction.status != TransactionStatus.rejected)
 
   def _gen_nonce (self, salt):
     pswd = self._gen_noce_password ()
@@ -100,29 +100,31 @@ class RHTransfermovilTransaction (RHTransfermovil):
 
   def _process_args (self):
     super ()._process_args ()
-    self.amount = self.registration.transaction.amount
-    self.currency = self.registration.transaction.currency
 
     if (not self.registration.transaction):
       raise BadRequest ()
+    else:
+
+      self.amount = self.registration.transaction.amount
+      self.currency = self.registration.transaction.currency
 
 class RHTransfermovilCancel (RHTransfermovilTransaction):
 
   def _process (self):
     if (self._is_duplicated ()):
-      current_plugin.logger.info("Payment not recorded because transaction was duplicated\nData received: %s",
+      current_plugin.logger.info ("Payment not recorded because transaction was duplicated\nData received: %s",
                                     request.json)
       raise BadRequest ()
     else:
 
-      self._register (TransactionAction.cancel, {})
+      self._register (TransactionAction.reject, {})
 
 class RHTransfermovilNotify (RHTransfermovilTransaction):
 
   def _process (self):
 
     if (self._is_duplicated ()):
-      current_plugin.logger.info("Payment not recorded because transaction was duplicated\nData received: %s",
+      current_plugin.logger.info ("Payment not recorded because transaction was duplicated\nData received: %s",
                                     request.json)
       raise BadRequest ()
     else:
@@ -162,7 +164,7 @@ class RHTransfermovilProceed (RHTransfermovil):
   def _process (self):
 
     if (self._is_duplicated ()):
-      current_plugin.logger.info("Payment not recorded because transaction was duplicated\nData received: %s",
+      current_plugin.logger.info ("Payment not recorded because transaction was duplicated\nData received: %s",
                                        request.json)
       raise BadRequest ()
     else:

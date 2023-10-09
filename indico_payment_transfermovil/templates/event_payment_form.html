@@ -1,10 +1,19 @@
 {% from 'message_box.html' import message_box %}
 {% if currency != 'CUP' and currency != 'CUC' %}
   {% call message_box ('error') %}
-    {% trans %}Current currency{% endtrans %} {{ currency }} {% trans %}is not supported by Transfermovil services{% endtrans %}
+    {% trans %}Current currency {{ currency }} is not supported by Transfermovil services{% endtrans %}
   {% endcall %}
 {% else %}
-  {% trans %}Clicking in the{% endtrans %} <strong>{% trans %}Query QR code{% endtrans %}</strong> {% trans %}button will generate a Transfermovil payment QR{% endtrans %}
+  <p>
+    {%- trans strong = '<strong>' | safe, endstrong = '</strong>' | safe -%}
+      Clicking in the {{ strong }}Query QR code{{endstrong}} button will generate a Transfermovil payment QR
+    {%- endtrans -%}
+  </p>
+  <p id="transfermovil-cancel" class="hidden">
+    {%- trans strong = '<strong>' | safe, endstrong = '</strong>' | safe, link = '<a onclick="transfermovil_cancel_qr ()">' | safe, endlink = '</a>' | safe -%}
+      Click {{ link }}here{{ endlink }} to cancel transaction
+    {%- endtrans -%}
+  </p>
 
   <dl class="i-data-list">
     <dt>{% trans %}First name{% endtrans %}</dt>
@@ -12,69 +21,119 @@
     <dt>{% trans %}Last name{% endtrans %}</dt>
     <dd>{{ registration.last_name }}</dd>
     <dt>{% trans %}Total amount{% endtrans %}</dt>
-    <dd>{{ format_currency(amount, currency, locale=session.lang) }}</dd>
+    <dd>{{ format_currency(amount, currency, locale = session.lang) }}</dd>
     <dt></dt>
     <dd id="transfermovil-arena">
-      <script>
-        function transfermovil_query_qr ()
-          {
-            var arena_tag = $('#transfermovil-arena')
-            var erbox_tag = $('#transfermovil-error-box')
-            var ertex_tag = $('#transfermovil-error-box div.message-text')
-            var overlay = IndicoUI.Dialogs.Util.progress ()
-
-            erbox_tag.addClass ('hidden')
-
-            fetch ('{{ proceed_url }}',
-              {
-                headers :
-                  {
-                    "Content-Type" : "application/json",
-                  },
-
-                body : JSON.stringify (
-                  {
-                    "amount" : {{ amount | tojson }},
-                    "currency" : {{ currency | tojson }},
-                  }),
-
-                cache : 'no-cache',
-                method : 'POST',
-              })
-
-            .then (response =>
-              {
-                overlay ()
-
-                if (!response.ok)
-                  {
-                    var message = '{% trans %}Request error{% endtrans %}'
-                                + ' ' + response.status
-                                + ' ' + response.statusText
-
-                    erbox_tag.removeClass ('hidden')
-                    ertex_tag.text (message)
-                    throw new Error (message)
-                  }
-                return response.json ()
-              })
-
-            .then (json =>
-              {
-                var tag = $('<img></img>',
-                  {
-                    src : 'data:image/svg+xml;base64,' + json.qr,
-                  })
-                arena_tag.html (tag)
-              })
-          }
-      </script>
-
-      <button name="payment-button" onclick="transfermovil_query_qr ()">{% trans %}Query QR code{% endtrans %}</button>
-      </div>
+      <button name="payment-button" onclick="transfermovil_query_qr ()">
+        {% trans %}Query QR code{% endtrans %}
+      </button>
     </dd>
   </dl>
 
   {% call message_box ('error', classes = 'hidden', id = 'transfermovil-error-box') %}
   {% endcall %}
+
+  <script>
+
+    function transfermovil_cancel_qr ()
+      {
+        var arena_tag = $('#transfermovil-arena')
+        var erbox_tag = $('#transfermovil-error-box')
+        var ertex_tag = $('#transfermovil-error-box div.message-text')
+        var overlay = IndicoUI.Dialogs.Util.progress ()
+
+        erbox_tag.addClass ('hidden')
+
+        fetch ('{{ cancel_url }}',
+          {
+            headers :
+              {
+                "Content-Type" : "application/json",
+              },
+
+            body : JSON.stringify (
+              {
+                "noname" : "nodata",
+              }),
+
+            cache : 'no-cache',
+            method : 'POST',
+          })
+
+        .then (response =>
+          {
+            overlay ()
+
+            if (response.ok)
+              location.reload ()
+            else
+              {
+                var message = '{% trans %}Request error{% endtrans %}'
+                            + ' ' + response.status
+                            + ' ' + response.statusText
+
+                erbox_tag.removeClass ('hidden')
+                ertex_tag.text (message)
+                throw new Error (message)
+              }
+          })
+      }
+
+    function transfermovil_query_qr ()
+      {
+        var arena_tag = $('#transfermovil-arena')
+        var cancl_tag = $('#transfermovil-cancel')
+        var erbox_tag = $('#transfermovil-error-box')
+        var ertex_tag = $('#transfermovil-error-box div.message-text')
+        var overlay = IndicoUI.Dialogs.Util.progress ()
+
+        erbox_tag.addClass ('hidden')
+
+        fetch ('{{ proceed_url }}',
+          {
+            body : JSON.stringify (
+              {
+                "amount" : {{ amount | tojson }},
+                "currency" : {{ currency | tojson }},
+              }),
+
+            cache : 'no-cache',
+
+            headers :
+              {
+                "Content-Type" : "application/json",
+              },
+
+            method : 'POST',
+          })
+
+        .then (response =>
+          {
+            overlay ()
+
+            if (!response.ok)
+              {
+                var message = '{% trans %}Request error{% endtrans %}'
+                            + ' ' + response.status
+                            + ' ' + response.statusText
+
+                erbox_tag.removeClass ('hidden')
+                ertex_tag.text (message)
+                throw new Error (message)
+              }
+            return response.json ()
+          })
+
+        .then (json =>
+          {
+            var tag = $('<img></img>',
+              {
+                src : 'data:image/svg+xml;base64,' + json.qr,
+              })
+
+            arena_tag.html (tag)
+            cancl_tag.removeClass ('hidden')
+          })
+      }
+  </script>
 {% endif %}

@@ -44,16 +44,14 @@ class TransfermovilPaymentPlugin (PaymentPluginMixin, IndicoPlugin):
   default_settings = { 'method_name' : 'Transfermovil', 'source_id' : '', 'user_name' : '', 'url' : '', }
   default_event_settings = { 'enabled' : False, 'method_name' : None, 'source_id' : None, 'user_name' : None, }
 
-  def init (self):
-    super ().init ()
+  def adjust_payment_form_data (self, data):
+    registration = data ['registration']
+    data ['cancel_url'] = url_for_plugin ('payment_transfermovil.cancel', registration.locator.uuid, _external = True)
+    data ['notify_url'] = url_for_plugin ('payment_transfermovil.notify', registration.locator.uuid, _external = True)
+    data ['proceed_url'] = url_for_plugin ('payment_transfermovil.proceed', registration.locator.uuid, _external = True)
 
   def get_blueprints (self):
      return blueprint
 
-  def adjust_payment_form_data (self, data):
-    event = data ['event']
-    registration = data ['registration']
-
-    data ['cancel_url'] = url_for_plugin ('payment_transfermovil.cancel', registration.locator.uuid, _external = True)
-    data ['notify_url'] = url_for_plugin ('payment_transfermovil.notify', registration.locator.uuid, _external = True)
-    data ['proceed_url'] = url_for_plugin ('payment_transfermovil.proceed', registration.locator.uuid, _external = True)
+  def init (self):
+    super ().init ()
