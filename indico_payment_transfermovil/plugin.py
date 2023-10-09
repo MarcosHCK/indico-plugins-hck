@@ -54,5 +54,6 @@ class TransfermovilPaymentPlugin (PaymentPluginMixin, IndicoPlugin):
     event = data ['event']
     registration = data ['registration']
 
+    data ['cancel_url'] = url_for_plugin ('payment_transfermovil.cancel', registration.locator.uuid, _external = True)
     data ['notify_url'] = url_for_plugin ('payment_transfermovil.notify', registration.locator.uuid, _external = True)
     data ['proceed_url'] = url_for_plugin ('payment_transfermovil.proceed', registration.locator.uuid, _external = True)

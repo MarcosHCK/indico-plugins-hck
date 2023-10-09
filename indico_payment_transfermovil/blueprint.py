@@ -15,12 +15,15 @@
 # along with PaymentTransfermovil. If not, see <http://www.gnu.org/licenses/>.
 #
 from indico.core.plugins import IndicoPluginBlueprint
-from indico_payment_transfermovil.controllers import RHTransfermovilNotify, RHTransfermovilProceed
+from indico_payment_transfermovil.controllers import RHTransfermovilCancel
+from indico_payment_transfermovil.controllers import RHTransfermovilNotify
+from indico_payment_transfermovil.controllers import RHTransfermovilProceed
 
 blueprint = IndicoPluginBlueprint (
   'payment_transfermovil', __name__,
   url_prefix = '/event/<int:event_id>/registrations/<int:reg_form_id>/payment/response/transfermovil'
     )
 
+blueprint.add_url_rule ('/cancel', 'cancel', RHTransfermovilCancel, methods = ('POST',))
 blueprint.add_url_rule ('/notify', 'notify', RHTransfermovilNotify, methods = ('POST',))
 blueprint.add_url_rule ('/proceed', 'proceed', RHTransfermovilProceed, methods = ('POST',))

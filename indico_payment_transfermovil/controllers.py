@@ -92,12 +92,29 @@ class RHTransfermovil (RH):
       provider = 'transfermovil',
       registration = self.registration)
 
-class RHTransfermovilNotify (RHTransfermovil):
+class RHTransfermovilTransaction (RHTransfermovil):
 
   def _is_duplicated (self):
-    status = TransactionStatus.pending
     transaction = self.registration.transaction
-    return super ()._is_duplicated () and (transaction.status != status)
+    return super ()._is_duplicated () and (transaction.status != TransactionStatus.pending)
+
+  def _process_args (self):
+    super ()._process_args ()
+    self.amount = self.registration.transaction.amount
+    self.currency = self.registration.transaction.currency
+
+class RHTransfermovilCancel (RHTransfermovilTransaction):
+
+  def _process (self):
+    if (self._is_duplicated ()):
+      current_plugin.logger.info("Payment not recorded because transaction was duplicated\nData received: %s",
+                                    request.json)
+      raise BadRequest ()
+    else:
+
+      self._register (TransactionAction.cancel, {})
+
+class RHTransfermovilNotify (RHTransfermovilTransaction):
 
   def _process (self):
     if (self._is_duplicated ()):
@@ -132,9 +149,6 @@ class RHTransfermovilNotify (RHTransfermovil):
           'phone' : notify.get ('Phone'),
           'tm_id' : notify.get ('TmId'),
         }
-
-      self.amount = transaction.amount
-      self.currency = transaction.currency
 
       self._register (TransactionAction.complete, data)
       return { "Success" : True, "Resultmsg" : "OK", "Status" : 1, }
