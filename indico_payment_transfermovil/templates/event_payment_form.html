@@ -27,10 +27,15 @@
 
             fetch ('{{ proceed_url }}',
               {
+                headers :
+                  {
+                    "Content-Type" : "application/json",
+                  },
+
                 body : JSON.stringify (
                   {
-                    amount : {{ amount | tojson }},
-                    currency : {{ currency | tojson }},
+                    "amount" : {{ amount | tojson }},
+                    "currency" : {{ currency | tojson }},
                   }),
 
                 cache : 'no-cache',

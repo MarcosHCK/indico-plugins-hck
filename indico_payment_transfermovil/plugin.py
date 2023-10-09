@@ -19,17 +19,17 @@ from indico_payment_transfermovil.blueprint import blueprint
 from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.events.payment import (PaymentEventSettingsFormBase, PaymentPluginMixin, PaymentPluginSettingsFormBase)
 from indico.util.string import remove_accents, str_to_ascii
-from wtforms.fields import StringField, URLField
+from wtforms.fields import IntegerField, StringField, URLField
 from wtforms.validators import DataRequired, Optional
 
 class PluginSettingsForm (PaymentPluginSettingsFormBase):
   url = URLField (_("API URL"), [DataRequired ()], description = _('URL of the Transfermovil REST API.'))
   user_name = StringField (_('Service user name'), [DataRequired ()], description = _('Transfermovil service user name'))
-  source_id = StringField (_('Service identifier'), [DataRequired ()], description = _('Transfermovil service identifier'))
+  source_id = IntegerField (_('Service identifier'), [DataRequired ()], description = _('Transfermovil service identifier'))
 
 class EventSettingsForm (PaymentEventSettingsFormBase):
   user_name = StringField (_('Service user name'), [Optional ()], description = _('Transfermovil service user name'))
-  source_id = StringField (_('Service identifier'), [Optional ()], description = _('Transfermovil service identifier'))
+  source_id = IntegerField (_('Service identifier'), [Optional ()], description = _('Transfermovil service identifier'))
 
 class TransfermovilPaymentPlugin (PaymentPluginMixin, IndicoPlugin):
   """Transfermovil
