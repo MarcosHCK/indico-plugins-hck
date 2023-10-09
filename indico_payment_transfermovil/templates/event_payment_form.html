@@ -1,70 +1,76 @@
 {% from 'message_box.html' import message_box %}
-{% trans %}Clicking in the{% endtrans %} <strong>{% trans %}Query QR code{% endtrans %}</strong> {% trans %}button will generate a Transfermovil payment QR{% endtrans %}
+{% if currency != 'CUP' and currency != 'CUC' %}
+  {% call message_box ('error') %}
+    {% trans %}Current currency{% endtrans %} {{ currency }} {% trans %}is not supported by Transfermovil services{% endtrans %}
+  {% endcall %}
+{% else %}
+  {% trans %}Clicking in the{% endtrans %} <strong>{% trans %}Query QR code{% endtrans %}</strong> {% trans %}button will generate a Transfermovil payment QR{% endtrans %}
 
-<dl class="i-data-list">
-  <dt>{% trans %}First name{% endtrans %}</dt>
-  <dd>{{ registration.first_name }}</dd>
-  <dt>{% trans %}Last name{% endtrans %}</dt>
-  <dd>{{ registration.last_name }}</dd>
-  <dt>{% trans %}Total amount{% endtrans %}</dt>
-  <dd>{{ format_currency(amount, currency, locale=session.lang) }}</dd>
-  <dt></dt>
-  <dd id="transfermovil-arena">
-    <script>
-      function transfermovil_query_qr ()
-        {
-          var arena_tag = $('#transfermovil-arena')
-          var erbox_tag = $('#transfermovil-error-box')
-          var ertex_tag = $('#transfermovil-error-box div.message-text')
-          var overlay = IndicoUI.Dialogs.Util.progress ()
+  <dl class="i-data-list">
+    <dt>{% trans %}First name{% endtrans %}</dt>
+    <dd>{{ registration.first_name }}</dd>
+    <dt>{% trans %}Last name{% endtrans %}</dt>
+    <dd>{{ registration.last_name }}</dd>
+    <dt>{% trans %}Total amount{% endtrans %}</dt>
+    <dd>{{ format_currency(amount, currency, locale=session.lang) }}</dd>
+    <dt></dt>
+    <dd id="transfermovil-arena">
+      <script>
+        function transfermovil_query_qr ()
+          {
+            var arena_tag = $('#transfermovil-arena')
+            var erbox_tag = $('#transfermovil-error-box')
+            var ertex_tag = $('#transfermovil-error-box div.message-text')
+            var overlay = IndicoUI.Dialogs.Util.progress ()
 
-          erbox_tag.addClass ('hidden')
+            erbox_tag.addClass ('hidden')
 
-          fetch ('{{ proceed_url }}',
-            {
-              body : JSON.stringify (
-                {
-                  amount : {{ amount | tojson }},
-                  currency : {{ currency | tojson }},
-                }),
+            fetch ('{{ proceed_url }}',
+              {
+                body : JSON.stringify (
+                  {
+                    amount : {{ amount | tojson }},
+                    currency : {{ currency | tojson }},
+                  }),
 
-              cache : 'no-cache',
-              method : 'POST',
-            })
+                cache : 'no-cache',
+                method : 'POST',
+              })
 
-          .then (response =>
-            {
-              overlay ()
+            .then (response =>
+              {
+                overlay ()
 
-              if (!response.ok)
-                {
-                  var pre0 = '{% trans %}Request error{% endtrans %}'
-                  var pre1 = ' ' + response.status
-                  var pre2 = ' ' + response.statusText
+                if (!response.ok)
+                  {
+                    var pre0 = '{% trans %}Request error{% endtrans %}'
+                    var pre1 = ' ' + response.status
+                    var pre2 = ' ' + response.statusText
 
-                  erbox_tag.removeClass ('hidden')
-                  ertex_tag.text (pre0 + pre1 + pre2)
+                    erbox_tag.removeClass ('hidden')
+                    ertex_tag.text (pre0 + pre1 + pre2)
 
-                  console.log ('Request error ' + response.status + ' ' + response.statusText)
-                }
-              return response.json ()
-            })
+                    console.log ('Request error ' + response.status + ' ' + response.statusText)
+                  }
+                return response.json ()
+              })
 
-          .then (json =>
-            {
-              var tag = $('<img></img>',
-                {
-                  src : 'data:image/svg+xml;base64,' + json.qr,
-                })
-              arena_tag.html (tag)
-            })
-        }
-    </script>
+            .then (json =>
+              {
+                var tag = $('<img></img>',
+                  {
+                    src : 'data:image/svg+xml;base64,' + json.qr,
+                  })
+                arena_tag.html (tag)
+              })
+          }
+      </script>
 
-    <button name="payment-button" onclick="transfermovil_query_qr ()">{% trans %}Query QR code{% endtrans %}</button>
-    </div>
-  </dd>
-</dl>
+      <button name="payment-button" onclick="transfermovil_query_qr ()">{% trans %}Query QR code{% endtrans %}</button>
+      </div>
+    </dd>
+  </dl>
 
-{% call message_box ('error', classes = 'hidden', id = 'transfermovil-error-box') %}
-{% endcall %}
+  {% call message_box ('error', classes = 'hidden', id = 'transfermovil-error-box') %}
+  {% endcall %}
+{% endif %}

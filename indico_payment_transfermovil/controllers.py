@@ -29,6 +29,28 @@ class RHTransfermovil (RH):
 
   CSRF_ENABLED = False
 
+  def _is_duplicated (self):
+    transaction = self.registration.transaction
+
+    if (not transaction or transaction.provider != 'transfermovil'):
+      return False
+    return (transaction.data ['order_id'] == request.form.get ('order_id'))
+
+  def _get_source_id (self):
+    if (current_plugin.event_settings.get (self.registration.registration_form.event, 'source_id') == None):
+      return current_plugin.settings.get ('source_id')
+    else:
+      return current_plugin.event_settings.get (self.registration.registration_form.event, 'source_id')
+
+  def _get_url (self):
+    return current_plugin.settings.get ('url')
+
+  def _get_user_name (self):
+    if (current_plugin.event_settings.get (self.registration.registration_form.event, 'user_name') == None):
+      return current_plugin.settings.get ('user_name')
+    else:
+      return current_plugin.event_settings.get (self.registration.registration_form.event, 'user_name')
+
   def _process_args (self):
     self.amount = request.form.get ('amount')
     self.currency = request.form.get ('currency')
@@ -54,28 +76,6 @@ class RHTransfermovilNotify (RHTransfermovil):
       return { "Success" : True, "Resultmsg" : "OK", "Status" : 1, }
 
 class RHTransfermovilProceed (RHTransfermovil):
-
-  def _is_duplicated (self):
-    transaction = self.registration.transaction
-
-    if (not transaction or transaction.provider != 'transfermovil'):
-      return False
-    return (transaction.data ['order_id'] == request.form.get ('order_id'))
-
-  def _get_source_id (self):
-    if (current_plugin.event_settings.get (self.registration.registration_form.event, 'source_id') == None):
-      return current_plugin.settings.get ('source_id')
-    else:
-      return current_plugin.event_settings.get (self.registration.registration_form.event, 'source_id')
-
-  def _get_url (self):
-    return current_plugin.settings.get ('url')
-
-  def _get_user_name (self):
-    if (current_plugin.event_settings.get (self.registration.registration_form.event, 'user_name') == None):
-      return current_plugin.settings.get ('user_name')
-    else:
-      return current_plugin.event_settings.get (self.registration.registration_form.event, 'user_name')
 
   def _process (self):
 
