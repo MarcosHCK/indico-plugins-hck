@@ -23,4 +23,4 @@ blueprint = IndicoPluginBlueprint (
     )
 
 blueprint.add_url_rule ('/notify', 'notify', RHTransfermovilNotify, methods = ('POST',))
-blueprint.add_url_rule ('/proceed', 'proceed', RHTransfermovilProceed, methods = ('POST', 'GET'))
+blueprint.add_url_rule ('/proceed', 'proceed', RHTransfermovilProceed, methods = ('POST',))
