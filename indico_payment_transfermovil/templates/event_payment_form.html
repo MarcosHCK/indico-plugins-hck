@@ -52,6 +52,7 @@
             headers :
               {
                 "Content-Type" : "application/json",
+                "X-CSRF-Token" : "{{ session.csrf_token }}",
               },
 
             body : JSON.stringify (
@@ -105,6 +106,7 @@
             headers :
               {
                 "Content-Type" : "application/json",
+                "X-CSRF-Token": "{{ session.csrf_token }}",
               },
 
             method : 'POST',

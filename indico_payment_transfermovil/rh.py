@@ -27,8 +27,6 @@ from werkzeug.exceptions import BadRequest
 
 class RHTransfermovil (RH):
 
-  CSRF_ENABLED = False
-
   def _gen_nonce_password (self):
     sourceid = self._get_source_id ()
     username = self._get_user_name ()

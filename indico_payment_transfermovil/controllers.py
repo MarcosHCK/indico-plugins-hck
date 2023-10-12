@@ -29,6 +29,8 @@ import base64, qrcode, requests
 
 class RHTransfermovilCancel (RHTransfermovilWithTransaction):
 
+  CSRF_ENABLED = False
+
   def _process (self):
 
     if (not self._has_transaction ()):
@@ -39,6 +41,8 @@ class RHTransfermovilCancel (RHTransfermovilWithTransaction):
       self._register (TransactionAction.reject, {})
 
 class RHTransfermovilNotify (RHTransfermovilWithTransaction):
+
+  CSRF_ENABLED = False
 
   def _process (self):
 
