@@ -15,6 +15,27 @@
 # along with PaymentTransfermovil. If not, see <http://www.gnu.org/licenses/>.
 #
 
-/*.egg-info/**
-/.vscode/**
-/dist/**
+.*.swp
+.cache/
+.coverage
+.idea/
+.indico_source
+.jsconfig.json
+.pytest_cache/
+.venv/
+.vscode
+.webassets-cache/
+*.egg-info
+*.lock
+*.min.css
+*.min.js
+*.mo
+*.pyc
+build/
+dist/
+htmlcov/
+Makefile
+node_modules/
+url_map.json
+webpack-build-config.json
+wheelhouse/
