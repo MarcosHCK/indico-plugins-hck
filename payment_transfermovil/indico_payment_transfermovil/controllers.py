@@ -39,6 +39,7 @@ class RHTransfermovilCancel (RHTransfermovilWithTransaction):
     else:
 
       self._register (TransactionAction.reject, {})
+      return { "Success" : True, "Resultmsg" : "OK", "Status" : 1, }
 
 class RHTransfermovilNotify (RHTransfermovilWithTransaction):
 

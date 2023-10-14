@@ -27,15 +27,15 @@ from werkzeug.exceptions import BadRequest
 
 class RHTransfermovil (RH):
 
+  def _gen_external_id (self):
+    return 'Indico{{{0}}}'.format (self.token)
+
   def _gen_nonce_password (self):
     sourceid = self._get_source_id ()
     username = self._get_user_name ()
 
     password = '{0}-{1}-{2}'.format (sourceid, username, self.token)
     return password.encode ('utf-8')
-
-  def _gen_external_id (self):
-    return 'Indico{{{0}}}'.format (self.token)
 
   def _gen_nonce_salt (self):
     return urandom (16)

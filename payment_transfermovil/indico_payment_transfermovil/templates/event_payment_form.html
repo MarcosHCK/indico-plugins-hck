@@ -4,14 +4,12 @@
     {% trans %}Current currency {{ currency }} is not supported by Transfermovil services{% endtrans %}
   {% endcall %}
 {% else %}
-  <p>
-    {%- trans strong = '<strong>' | safe, endstrong = '</strong>' | safe -%}
-      Clicking in the {{ strong }}Query QR code{{endstrong}} button will generate a Transfermovil payment QR
-    {%- endtrans -%}
-  </p>
+  {%- trans p = '<p>' | safe, endp = '</p>' | safe, strong = '<strong>' | safe, endstrong = '</strong>' | safe -%}
+      {{ p }}Click in the {{ strong }}Query QR{{ endstrong }} button to generate a Transfermovil payment QR{{ endp }}
+  {%- endtrans -%}
   <p id="transfermovil-cancel" class="hidden">
-    {%- trans strong = '<strong>' | safe, endstrong = '</strong>' | safe, link = '<a onclick="transfermovil_cancel_qr ()">' | safe, endlink = '</a>' | safe -%}
-      Click {{ link }}here{{ endlink }} to cancel transaction
+    {%- trans a = '<a>' | safe, enda = '</a>' | safe, strong = '<strong>' | safe, endstrong = '</strong>' | safe -%}
+      Click {{ a }}here{{ enda }} to cancel payment order
     {%- endtrans -%}
   </p>
 
@@ -23,122 +21,53 @@
     <dt>{% trans %}Total amount{% endtrans %}</dt>
     <dd>{{ format_currency(amount, currency, locale = session.lang) }}</dd>
     <dt></dt>
-    <dd id="transfermovil-arena">
-      <button name="payment-button" onclick="transfermovil_query_qr ()">
-        {% trans %}Query QR code{% endtrans %}
-      </button>
+    <dd id="transfermovil-area">
+      <div>
+        <a class="i-button highlight">{% trans %}Query QR{% endtrans %}</a>
+      </div>
     </dd>
+
+    <script>
+      const amount = {{ amount | tojson }}
+      const cancel_url = {{ cancel_url | tojson }}
+      const csrf_token = {{ session.csrf_token | tojson }}
+      const currency = {{ currency | tojson }}
+      const proceed_url = {{ proceed_url | tojson }}
+
+      function _fetch (url, data)
+        {
+          return new Promise ((resolve, reject) =>
+            {
+              $.ajax (
+                {
+                  cache : false,
+                  complete : IndicoUI.Dialogs.Util.progress (),
+                  data : JSON.stringify ($.extend ({}, data || {})),
+                  dataType : 'json',
+                  error : handleAjaxError,
+                  headers : { 'Content-Type' : 'application/json', 'X-CSRF-Token' : csrf_token, },
+                  success: (data) => { handleAjaxError (data) || resolve (data) },
+                  type : 'POST',
+                  url : url,
+                })
+            })
+        }
+
+      $('#transfermovil-cancel a').on ('click', (event) =>
+        {
+          event.preventDefault ()
+          _fetch (cancel_url, { amount : amount, currency : currency, }).then (() => location.reload ())
+        })
+
+      $('#transfermovil-area a').on ('click', (event) =>
+        {
+          event.preventDefault ()
+          _fetch (proceed_url, { amount : amount, currency : currency, }).then ((json) =>
+            {
+              $('#transfermovil-area').html ($('<img/>', { src : 'data:image/svg+xml;base64,' + json.qr, }))
+              $('#transfermovil-cancel').removeClass ('hidden')
+            })
+        })
+    </script>
   </dl>
-
-  {% call message_box ('error', classes = 'hidden', id = 'transfermovil-error-box') %}
-  {% endcall %}
-
-  <script>
-
-    const amount = {{ amount | tojson }}
-    const currency = {{ currency | tojson }}
-
-    function transfermovil_cancel_qr ()
-      {
-        var arena_tag = $('#transfermovil-arena')
-        var erbox_tag = $('#transfermovil-error-box')
-        var ertex_tag = $('#transfermovil-error-box div.message-text')
-        var overlay = IndicoUI.Dialogs.Util.progress ()
-
-        erbox_tag.addClass ('hidden')
-
-        fetch ('{{ cancel_url }}',
-          {
-            headers :
-              {
-                "Content-Type" : "application/json",
-                "X-CSRF-Token" : "{{ session.csrf_token }}",
-              },
-
-            body : JSON.stringify (
-              {
-                "noname" : "nodata",
-              }),
-
-            cache : 'no-cache',
-            method : 'POST',
-          })
-
-        .then (response =>
-          {
-            overlay ()
-
-            if (response.ok)
-              location.reload ()
-            else
-              {
-                var message = '{% trans %}Request error{% endtrans %}'
-                            + ' ' + response.status
-                            + ' ' + response.statusText
-
-                erbox_tag.removeClass ('hidden')
-                ertex_tag.text (message)
-                throw new Error (message)
-              }
-          })
-      }
-
-    function transfermovil_query_qr ()
-      {
-        var arena_tag = $('#transfermovil-arena')
-        var cancl_tag = $('#transfermovil-cancel')
-        var erbox_tag = $('#transfermovil-error-box')
-        var ertex_tag = $('#transfermovil-error-box div.message-text')
-        var overlay = IndicoUI.Dialogs.Util.progress ()
-
-        erbox_tag.addClass ('hidden')
-
-        fetch ('{{ proceed_url }}',
-          {
-            body : JSON.stringify (
-              {
-                "amount" : amount,
-                "currency" : currency,
-              }),
-
-            cache : 'no-cache',
-
-            headers :
-              {
-                "Content-Type" : "application/json",
-                "X-CSRF-Token": "{{ session.csrf_token }}",
-              },
-
-            method : 'POST',
-          })
-
-        .then (response =>
-          {
-            overlay ()
-
-            if (!response.ok)
-              {
-                var message = '{% trans %}Request error{% endtrans %}'
-                            + ' ' + response.status
-                            + ' ' + response.statusText
-
-                erbox_tag.removeClass ('hidden')
-                ertex_tag.text (message)
-                throw new Error (message)
-              }
-            return response.json ()
-          })
-
-        .then (json =>
-          {
-            var tag = $('<img></img>',
-              {
-                src : 'data:image/svg+xml;base64,' + json.qr,
-              })
-
-            arena_tag.html (tag)
-            cancl_tag.removeClass ('hidden')
-          })
-      }
-  </script>
 {% endif %}
