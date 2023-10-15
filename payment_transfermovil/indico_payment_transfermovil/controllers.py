@@ -29,7 +29,7 @@ import base64, qrcode, requests
 
 class RHTransfermovilCancel (RHTransfermovilWithTransaction):
 
-  CSRF_ENABLED = False
+  CSRF_ENABLED = True
 
   def _process (self):
 
@@ -155,3 +155,23 @@ class RHTransfermovilProceed (RHTransfermovilWithoutTransaction):
     super ()._process_args ()
     self.amount = request.json.get ('amount')
     self.currency = request.json.get ('currency')
+
+class RHTransfermovilStatus (RHTransfermovilWithTransaction):
+
+  CSRF_ENABLED = True
+
+  def _process (self):
+
+    transaction = self.registration.transaction
+
+    if (not transaction):
+      current_plugin.logger.info ("Payment not recorded because transaction was not valid")
+      raise BadRequest ()
+    else:
+
+      if (transaction.provider != 'transfermovil'):
+        current_plugin.logger.info ("Payment not recorded because transaction was not valid")
+        raise BadRequest ()
+      else:
+
+        return { status : transaction.status.name, }

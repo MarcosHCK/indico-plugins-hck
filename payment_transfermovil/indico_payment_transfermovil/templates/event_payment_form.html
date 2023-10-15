@@ -7,11 +7,6 @@
   {%- trans p = '<p>' | safe, endp = '</p>' | safe, strong = '<strong>' | safe, endstrong = '</strong>' | safe -%}
       {{ p }}Click in the {{ strong }}Query QR{{ endstrong }} button to generate a Transfermovil payment QR{{ endp }}
   {%- endtrans -%}
-  <p id="transfermovil-cancel" class="hidden">
-    {%- trans a = '<a>' | safe, enda = '</a>' | safe, strong = '<strong>' | safe, endstrong = '</strong>' | safe -%}
-      Click {{ a }}here{{ enda }} to cancel payment order
-    {%- endtrans -%}
-  </p>
 
   <dl class="i-data-list">
     <dt>{% trans %}First name{% endtrans %}</dt>
@@ -21,53 +16,47 @@
     <dt>{% trans %}Total amount{% endtrans %}</dt>
     <dd>{{ format_currency(amount, currency, locale = session.lang) }}</dd>
     <dt></dt>
-    <dd id="transfermovil-area">
-      <div>
-        <a class="i-button highlight">{% trans %}Query QR{% endtrans %}</a>
-      </div>
+    <dd>
+      <a class="i-button highlight"
+         id="transfermovil-link">
+        {% trans %}Query QR{% endtrans %}
+      </a>
     </dd>
-
-    <script>
-      const amount = {{ amount | tojson }}
-      const cancel_url = {{ cancel_url | tojson }}
-      const csrf_token = {{ session.csrf_token | tojson }}
-      const currency = {{ currency | tojson }}
-      const proceed_url = {{ proceed_url | tojson }}
-
-      function _fetch (url, data)
-        {
-          return new Promise ((resolve, reject) =>
-            {
-              $.ajax (
-                {
-                  cache : false,
-                  complete : IndicoUI.Dialogs.Util.progress (),
-                  data : JSON.stringify ($.extend ({}, data || {})),
-                  dataType : 'json',
-                  error : handleAjaxError,
-                  headers : { 'Content-Type' : 'application/json', 'X-CSRF-Token' : csrf_token, },
-                  success: (data) => { handleAjaxError (data) || resolve (data) },
-                  type : 'POST',
-                  url : url,
-                })
-            })
-        }
-
-      $('#transfermovil-cancel a').on ('click', (event) =>
-        {
-          event.preventDefault ()
-          _fetch (cancel_url, { amount : amount, currency : currency, }).then (() => location.reload ())
-        })
-
-      $('#transfermovil-area a').on ('click', (event) =>
-        {
-          event.preventDefault ()
-          _fetch (proceed_url, { amount : amount, currency : currency, }).then ((json) =>
-            {
-              $('#transfermovil-area').html ($('<img/>', { src : 'data:image/svg+xml;base64,' + json.qr, }))
-              $('#transfermovil-cancel').removeClass ('hidden')
-            })
-        })
-    </script>
   </dl>
+
+  <script>
+    const amount = {{ amount | tojson }}
+    const cancel_url = {{ cancel_url | tojson }}
+    const csrf_token = {{ session.csrf_token | tojson }}
+    const currency = {{ currency | tojson }}
+    const proceed_url = {{ proceed_url | tojson }}
+    const status_url = {{ status_url | tojson }}
+
+    function _fetch (url, data)
+      {
+        return new Promise ((resolve, reject) => $.ajax (
+          {
+            cache : false,
+            complete : IndicoUI.Dialogs.Util.progress (),
+            data : JSON.stringify ($.extend ({}, data || {})),
+            dataType : 'json',
+            error : (error) => handleAjaxError (error) && reject (error),
+            headers : { 'Content-Type' : 'application/json', 'X-CSRF-Token' : csrf_token, },
+            success: (data) => handleAjaxError (data) ? reject (error) : resolve (data),
+            type : 'POST',
+            url : url,
+          }))
+      }
+
+    $('#transfermovil-link').on ('click', (event) =>
+      {
+        event.preventDefault ()
+
+        _fetch (proceed_url, { amount : amount, currency : currency, })
+        .then ((json) => showQrDialog (json.qr, (event, widget) =>
+            _fetch (cancel_url)
+            .then (() => location.reload ())
+          ))
+      })
+  </script>
 {% endif %}

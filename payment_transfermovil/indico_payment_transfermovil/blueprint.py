@@ -18,12 +18,14 @@ from indico.core.plugins import IndicoPluginBlueprint
 from indico_payment_transfermovil.controllers import RHTransfermovilCancel
 from indico_payment_transfermovil.controllers import RHTransfermovilNotify
 from indico_payment_transfermovil.controllers import RHTransfermovilProceed
+from indico_payment_transfermovil.controllers import RHTransfermovilStatus
 
 blueprint = IndicoPluginBlueprint (
   'payment_transfermovil', __name__,
-  url_prefix = '/event/<int:event_id>/registrations/<int:reg_form_id>/payment/response/transfermovil'
+  url_prefix = '/event/<int:event_id>/registrations/<int:reg_form_id>/payment/transfermovil'
     )
 
 blueprint.add_url_rule ('/cancel', 'cancel', RHTransfermovilCancel, methods = ('POST',))
 blueprint.add_url_rule ('/notify', 'notify', RHTransfermovilNotify, methods = ('POST',))
 blueprint.add_url_rule ('/proceed', 'proceed', RHTransfermovilProceed, methods = ('POST',))
+blueprint.add_url_rule ('/status', 'status', RHTransfermovilStatus, methods = ('POST',))

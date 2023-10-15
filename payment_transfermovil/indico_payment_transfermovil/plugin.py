@@ -20,6 +20,8 @@ from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.events.payment import PaymentEventSettingsFormBase
 from indico.modules.events.payment import PaymentPluginMixin
 from indico.modules.events.payment import PaymentPluginSettingsFormBase
+from indico.modules.events.payment.views import WPPaymentEvent
+from indico.modules.events.payment.views import WPPaymentEventManagement
 from indico.util.string import remove_accents, str_to_ascii
 from wtforms.fields import IntegerField, StringField, URLField
 from wtforms.validators import DataRequired, Optional
@@ -50,12 +52,15 @@ class TransfermovilPaymentPlugin (PaymentPluginMixin, IndicoPlugin):
     registration = data ['registration']
     data ['cancel_url'] = url_for_plugin ('payment_transfermovil.cancel', registration.locator.uuid, _external = True)
     data ['proceed_url'] = url_for_plugin ('payment_transfermovil.proceed', registration.locator.uuid, _external = True)
+    data ['status_url'] = url_for_plugin ('payment_transfermovil.status', registration.locator.uuid, _external = True)
 
   def get_blueprints (self):
      return blueprint
 
   def init (self):
     super ().init ()
+    self.inject_bundle ('main.js', WPPaymentEvent)
+    self.inject_bundle ('main.js', WPPaymentEventManagement)
 
   @property
   def logo_url (self):

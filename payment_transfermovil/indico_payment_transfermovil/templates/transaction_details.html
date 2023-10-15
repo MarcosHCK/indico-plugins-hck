@@ -1,7 +1,7 @@
 {% extends 'events/payment/transaction_details.html' %}
 
 {% block details %}
-  {% if not transaction.data._migrated %}
+  {% if transaction.status.name == 'successful' %}
     <dt>{% trans %}Bank ID{% endtrans %}</dt>
       <dd>{{ transaction.data ['bank_id'] }}</dd>
     <dt>{% trans %}Bank{% endtrans %}</dt>
