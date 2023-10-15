@@ -59,8 +59,7 @@ class TransfermovilPaymentPlugin (PaymentPluginMixin, IndicoPlugin):
 
   def init (self):
     super ().init ()
-    self.inject_bundle ('main.js', WPPaymentEvent)
-    self.inject_bundle ('main.js', WPPaymentEventManagement)
+    self.inject_bundle ('payment.js', WPPaymentEvent)
 
   @property
   def logo_url (self):

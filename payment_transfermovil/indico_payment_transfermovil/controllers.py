@@ -48,27 +48,27 @@ class RHTransfermovilNotify (RHTransfermovilWithTransaction):
   def _process (self):
 
     if (not self._has_transaction ()):
-      current_plugin.logger.info ("Payment not recorded because transaction was not valid")
+      current_plugin.logger.info ('Payment not recorded because transaction was not valid')
       raise BadRequest ()
     else:
 
       if (not request.headers.get ('password')):
-        current_plugin.logger.info ("Payment not recorded because transaction did not sent password header field")
+        current_plugin.logger.info ('Payment not recorded because transaction did not sent password header field')
         raise BadRequest ()
       if (int (request.headers.get ('source')) != self._get_source_id ()):
-        current_plugin.logger.info ("Payment not recorded because transaction did not sent source header field")
+        current_plugin.logger.info ('Payment not recorded because transaction did not sent source header field')
         raise BadRequest ()
       if (str (request.headers.get ('username')) != self._get_user_name ()):
-        current_plugin.logger.info ("Payment not recorded because transaction did not sent username header field")
+        current_plugin.logger.info ('Payment not recorded because transaction did not sent username header field')
         raise BadRequest ()
 
       notify = request.json
 
       if (notify.get ('ExternalId') != self._gen_external_id ()):
-        current_plugin.logger.info ("Payment not recorded because transaction did not sent ExternalId POST field")
+        current_plugin.logger.info ('Payment not recorded because transaction did not sent ExternalId POST field')
         raise BadRequest ()
       if (notify.get ('Source') != self._get_source_id ()):
-        current_plugin.logger.info ("Payment not recorded because transaction did not sent Source POST field")
+        current_plugin.logger.info ('Payment not recorded because transaction did not sent Source POST field')
         raise BadRequest ()
 
       transaction = self.registration.transaction
@@ -77,8 +77,7 @@ class RHTransfermovilNotify (RHTransfermovilWithTransaction):
       nonce = deserialize_password (request.headers.get ('password'))
 
       if (not self._check_nonce (salt, nonce)):
-        current_plugin.logger.info ("Payment not recorded because transaction password is invalid")
-        print ("Payment not recorded because transaction password is invalid")
+        current_plugin.logger.info ('Payment not recorded because transaction password is invalid')
         raise BadRequest ()
 
       data = {
@@ -90,14 +89,14 @@ class RHTransfermovilNotify (RHTransfermovilWithTransaction):
         }
 
       self._register (TransactionAction.complete, data)
-      return { "Success" : True, "Resultmsg" : "OK", "Status" : 1, }
+      return { 'Success' : True, 'Resultmsg' : 'OK', 'Status' : 1, }
 
 class RHTransfermovilProceed (RHTransfermovilWithoutTransaction):
 
   def _process (self):
 
     if (not self._has_not_transaction ()):
-      current_plugin.logger.info ("Payment not recorded because transaction was not valid")
+      current_plugin.logger.info ('Payment not recorded because transaction was not valid')
       raise BadRequest ()
     else:
 
@@ -111,7 +110,7 @@ class RHTransfermovilProceed (RHTransfermovilWithoutTransaction):
           'request' : {
               'Amount' : self.amount,
               'Currency' : self.currency,
-              'Description' : "Indico Event Payment",
+              'Description' : 'Indico Event Payment',
               'ExternalId' : external_id,
               'Source' : self._get_source_id (),
               'UrlResponse' : notify_url,
@@ -128,14 +127,14 @@ class RHTransfermovilProceed (RHTransfermovilWithoutTransaction):
       result = requests.post (self._get_url (), headers = headers, json = body)
 
       if (not result.ok):
-        current_plugin.logger.warning ("Transfermovil API request error: %i %s", result.status_code, result.reason)
+        current_plugin.logger.warning ('Transfermovil API request error: %i %s', result.status_code, result.reason)
         raise InternalServerError ()
       else:
 
         response = result.json ().get ('PayOrderResult')
 
         if (response.get ('Success') != 'true'):
-          current_plugin.logger.warning ("Transfermovil API request error: failed method")
+          current_plugin.logger.warning ('Transfermovil API request error: failed method')
           raise InternalServerError ()
         else:
 
@@ -149,7 +148,7 @@ class RHTransfermovilProceed (RHTransfermovilWithoutTransaction):
 
           qr.save (stream)
 
-          return { "qr" : base64.b64encode (stream.getvalue ()).decode (), }
+          return { 'qr' : base64.b64encode (stream.getvalue ()).decode (), }
 
   def _process_args (self):
     super ()._process_args ()
@@ -174,4 +173,4 @@ class RHTransfermovilStatus (RHTransfermovilWithTransaction):
         raise BadRequest ()
       else:
 
-        return { status : transaction.status.name, }
+        return { 'status' : transaction.status.name, }

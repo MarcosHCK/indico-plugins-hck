@@ -1,6 +1,6 @@
 {
   "entry" :
     {
-      "main" : "./index.js"
+      "payment" : "./payment.js"
     }
 }

@@ -14,19 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with PaymentTransfermovil. If not, see <http://www.gnu.org/licenses/>.
  */
-import { QrDialog } from './transfermovil'
-import React from 'react';
-import ReactDOM from 'react-dom';
 
-import * as Transfermovil from './transfermovil'
+import * as TransfermovilPayment from './payment-ui'
 
-window.showQrDialog = function (qrData, onCancel)
-{
-  const container = document.createElement ('div')
-  const jsx = (<QrDialog onCancel={onCancel} qrData={qrData} />)
-
-  ReactDOM.render (jsx, container)
-  document.body.appendChild (container)
-}
-
-window._Transfermovil = Transfermovil
+window._TransfermovilPayment = TransfermovilPayment
