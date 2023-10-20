@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with PaymentTransfermovil. If not, see <http://www.gnu.org/licenses/>.
 #
+from flask_pluginengine import current_plugin
 from indico_payment_transfermovil import _
 from indico_payment_transfermovil.blueprint import blueprint
 from indico.core.plugins import IndicoPlugin, url_for_plugin
@@ -30,6 +31,7 @@ class PluginSettingsForm (PaymentPluginSettingsFormBase):
   url = URLField (_("API URL"), [DataRequired ()], description = _('URL of the Transfermovil REST API.'))
   user_name = StringField (_('Service user name'), [DataRequired ()], description = _('Transfermovil service user name'))
   source_id = IntegerField (_('Service identifier'), [DataRequired ()], description = _('Transfermovil service identifier'))
+  valid_time = IntegerField (_('Payment valid time'), [DataRequired ()], description = _('Payment valid time (in seconds)'))
 
 class EventSettingsForm (PaymentEventSettingsFormBase):
   user_name = StringField (_('Service user name'), [Optional ()], description = _('Transfermovil service user name'))
@@ -45,7 +47,7 @@ class TransfermovilPaymentPlugin (PaymentPluginMixin, IndicoPlugin):
   settings_form = PluginSettingsForm
   event_settings_form = EventSettingsForm
 
-  default_settings = { 'method_name' : 'Transfermovil', 'source_id' : '', 'user_name' : '', 'url' : '', }
+  default_settings = { 'method_name' : 'Transfermovil', 'source_id' : 0, 'user_name' : '', 'url' : '', 'valid_time' : 600, }
   default_event_settings = { 'enabled' : False, 'method_name' : None, 'source_id' : None, 'user_name' : None, }
 
   def adjust_payment_form_data (self, data):
@@ -53,6 +55,7 @@ class TransfermovilPaymentPlugin (PaymentPluginMixin, IndicoPlugin):
     data ['cancel_url'] = url_for_plugin ('payment_transfermovil.cancel', registration.locator.uuid, _external = True)
     data ['proceed_url'] = url_for_plugin ('payment_transfermovil.proceed', registration.locator.uuid, _external = True)
     data ['status_url'] = url_for_plugin ('payment_transfermovil.status', registration.locator.uuid, _external = True)
+    data ['valid_time'] = current_plugin.settings.get ('valid_time')
 
   def get_blueprints (self):
      return blueprint
