@@ -134,7 +134,7 @@ class RHTransfermovilProceed (RHTransfermovilWithoutTransaction):
 
         response = result.json ().get ('PayOrderResult')
 
-        if (response.get ('Success') != 'true'):
+        if (response.get ('Success') != True):
           current_plugin.logger.warning ('Transfermovil API request error: failed method')
           raise InternalServerError ()
         else:
