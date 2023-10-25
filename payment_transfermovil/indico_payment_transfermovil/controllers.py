@@ -112,6 +112,7 @@ class RHTransfermovilProceed (RHTransfermovilWithoutTransaction):
               'Currency' : self.currency,
               'Description' : 'Indico Event Payment',
               'ExternalId' : external_id,
+              'Phone' : self._get_phone_number (),
               'Source' : self._get_source_id (),
               'UrlResponse' : notify_url,
               'ValidTime' : 60 * (10),

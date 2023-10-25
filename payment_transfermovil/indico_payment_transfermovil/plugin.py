@@ -29,13 +29,13 @@ from wtforms.validators import DataRequired, Optional
 
 class PluginSettingsForm (PaymentPluginSettingsFormBase):
   url = URLField (_("API URL"), [DataRequired ()], description = _('URL of the Transfermovil REST API.'))
-  user_name = StringField (_('Service user name'), [DataRequired ()], description = _('Transfermovil service user name'))
+  phone_number = StringField (_('Phone number'), [DataRequired ()], description = _('Phone number associated with the bank account'))
   source_id = IntegerField (_('Service identifier'), [DataRequired ()], description = _('Transfermovil service identifier'))
+  user_name = StringField (_('Service user name'), [DataRequired ()], description = _('Transfermovil service user name'))
   valid_time = IntegerField (_('Payment valid time'), [DataRequired ()], description = _('Payment valid time (in seconds)'))
 
 class EventSettingsForm (PaymentEventSettingsFormBase):
-  user_name = StringField (_('Service user name'), [Optional ()], description = _('Transfermovil service user name'))
-  source_id = IntegerField (_('Service identifier'), [Optional ()], description = _('Transfermovil service identifier'))
+  phone_number = StringField (_('Phone number'), [DataRequired ()], description = _('Phone number associated with the bank account'))
 
 class TransfermovilPaymentPlugin (PaymentPluginMixin, IndicoPlugin):
   """Transfermovil
@@ -47,8 +47,8 @@ class TransfermovilPaymentPlugin (PaymentPluginMixin, IndicoPlugin):
   settings_form = PluginSettingsForm
   event_settings_form = EventSettingsForm
 
-  default_settings = { 'method_name' : 'Transfermovil', 'source_id' : 0, 'user_name' : '', 'url' : '', 'valid_time' : 600, }
-  default_event_settings = { 'enabled' : False, 'method_name' : None, 'source_id' : None, 'user_name' : None, }
+  default_settings = { 'method_name' : 'Transfermovil', 'phone_number' : '+53 ', 'source_id' : 0, 'user_name' : '', 'url' : '', 'valid_time' : 600, }
+  default_event_settings = { 'enabled' : False, 'method_name' : None, 'phone_number' : None, 'source_id' : None, 'user_name' : None, }
 
   def adjust_payment_form_data (self, data):
     registration = data ['registration']

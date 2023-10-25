@@ -40,6 +40,16 @@ class RHTransfermovil (RH):
   def _gen_nonce_salt (self):
     return urandom (16)
 
+  def _get_phone_number (self):
+    event_settings = current_plugin.event_settings
+    regform = self.registration.registration_form
+    settings = current_plugin.settings
+
+    if (not event_settings.get (regform.event, 'phone_number')):
+      return settings.get ('phone_number')
+    else:
+      return event_settings.get (regform.event, 'phone_number')
+
   def _get_source_id (self):
     event_settings = current_plugin.event_settings
     regform = self.registration.registration_form
