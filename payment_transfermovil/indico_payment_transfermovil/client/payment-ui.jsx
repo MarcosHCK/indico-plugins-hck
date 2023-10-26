@@ -61,7 +61,7 @@ export function spawnQrButton ({ amount, cancel_url, csrf_token, currency, proce
       const json = await doFetch (status_url, {}, manual == false)
 
       if (json.status == 'successful')
-        location.reload ()
+        location.href = json.redirect_url
       else if (json.status != 'pending')
         throw new Error ('Unknown payment state \'' + json.status + '\'')
       else if (json.status == 'pending' && manual)

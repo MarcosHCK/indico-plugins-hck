@@ -22,6 +22,7 @@ from indico_payment_transfermovil.utils import deserialize_password
 from indico_payment_transfermovil.utils import serialize_password
 from indico.core.plugins import url_for_plugin
 from indico.modules.events.payment.models.transactions import TransactionAction, TransactionStatus
+from indico.web.flask.util import url_for
 from io import BytesIO
 from qrcode.image import svg
 from werkzeug.exceptions import BadRequest, InternalServerError
@@ -174,4 +175,11 @@ class RHTransfermovilStatus (RHTransfermovilWithTransaction):
         raise BadRequest ()
       else:
 
-        return { 'status' : transaction.status.name, }
+        if (transaction.status != TransactionStatus.successful):
+          return { 'status' : transaction.status.name, }
+        else:
+          return {
+              'redirect' : True,
+              'redirect_url' : url_for ('event_registration.display_regform', self.registration.locator.registrant),
+              'status' : transaction.status.name,
+            }
