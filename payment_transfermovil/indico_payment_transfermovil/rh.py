@@ -141,4 +141,6 @@ class RHTransfermovilWithoutTransaction (RHTransfermovil):
     if (not self.registration.transaction):
       return True
     else:
-      return transaction.status == TransactionStatus.rejected
+      rejected = transaction.status == TransactionStatus.rejected
+      cancelled = transaction.status == TransactionStatus.cancelled
+      return rejected or cancelled
