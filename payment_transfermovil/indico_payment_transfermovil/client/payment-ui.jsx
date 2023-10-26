@@ -90,7 +90,7 @@ export function spawnQrButton ({ amount, cancel_url, csrf_token, currency, proce
       const autoCheck = () => { onCheck (false); checkTimer (autoCheck) }
       const manualCheck = () => onCheck (true)
 
-      //checkTimer (autoCheck)
+      checkTimer (autoCheck)
 
       ReactDOM.render (<QrDialog onCancel={onCancel} onCheck={manualCheck} qrData={json.qr} validTime={validTime} />, divTag)
       document.body.appendChild (divTag)
