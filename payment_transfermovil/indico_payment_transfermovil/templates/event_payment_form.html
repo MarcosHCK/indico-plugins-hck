@@ -17,22 +17,18 @@
     <dd>{{ format_currency(amount, currency, locale = session.lang) }}</dd>
     <dt></dt>
     <dd id="transfermovil-area">
-      <script>
-        const data =
-          {
-            amount : {{ amount | tojson }},
-            cancel_url : {{ cancel_url | tojson }},
-            csrf_token : {{ session.csrf_token | tojson }},
-            currency : {{ currency | tojson }},
-            proceed_url : {{ proceed_url | tojson }},
-            status_url : {{ status_url | tojson }},
-            validTime : {{ valid_time | tojson }}
-          }
-
-        const container = document.querySelector ('#transfermovil-area')
-
-        _TransfermovilPayment.spawnQrButton (data, container)
-      </script>
     </dd>
+    <script>
+      _TransfermovilPayment.spawnQrButton (
+        {
+          amount : {{ amount | tojson }},
+          cancel_url : {{ cancel_url | tojson }},
+          csrf_token : {{ session.csrf_token | tojson }},
+          currency : {{ currency | tojson }},
+          proceed_url : {{ proceed_url | tojson }},
+          status_url : {{ status_url | tojson }},
+          validTime : {{ valid_time | tojson }}
+        }, document.querySelector ('#transfermovil-area'))
+    </script>
   </dl>
 {% endif %}

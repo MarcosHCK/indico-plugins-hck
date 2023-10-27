@@ -1,18 +1,18 @@
-# Copyright 2023 MarcosHCK
-# This file is part of PaymentTransfermovil.
+# Copyright (c) 2023-2025 MarcosHCK
+# This file is part of indico-plugins-hck.
 #
-# PaymentTransfermovil is free software: you can redistribute it and/or modify
+# indico-plugins-hck is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PaymentTransfermovil is distributed in the hope that it will be useful,
+# indico-plugins-hck is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with PaymentTransfermovil. If not, see <http://www.gnu.org/licenses/>.
+# along with indico-plugins-hck. If not, see <http://www.gnu.org/licenses/>.
 #
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -27,20 +27,20 @@ from werkzeug.exceptions import BadRequest
 
 class RHTransfermovil (RH):
 
-  def _gen_external_id (self):
+  def _gen_external_id (self) -> str:
     return 'Indico{{{0}}}'.format (self.token)
 
-  def _gen_nonce_password (self):
+  def _gen_nonce_password (self) -> str:
     sourceid = self._get_source_id ()
     username = self._get_user_name ()
 
     password = '{0}-{1}-{2}'.format (sourceid, username, self.token)
     return password.encode ('utf-8')
 
-  def _gen_nonce_salt (self):
+  def _gen_nonce_salt (self) -> bytes:
     return urandom (16)
 
-  def _get_phone_number (self):
+  def _get_phone_number (self) -> str:
     event_settings = current_plugin.event_settings
     regform = self.registration.registration_form
     settings = current_plugin.settings
@@ -50,28 +50,12 @@ class RHTransfermovil (RH):
     else:
       return event_settings.get (regform.event, 'phone_number')
 
-  def _get_source_id (self):
-    event_settings = current_plugin.event_settings
-    regform = self.registration.registration_form
-    settings = current_plugin.settings
-
-    if (not event_settings.get (regform.event, 'source_id')):
-      return settings.get ('source_id')
-    else:
-      return event_settings.get (regform.event, 'source_id')
-
-  def _get_url (self):
+  def _get_source_id (self) -> str:
+    return current_plugin.settings.get ('source_id')
+  def _get_url (self) -> str:
     return current_plugin.settings.get ('url')
-
-  def _get_user_name (self):
-    event_settings = current_plugin.event_settings
-    regform = self.registration.registration_form
-    settings = current_plugin.settings
-
-    if (not event_settings.get (regform.event, 'user_name')):
-      return settings.get ('user_name')
-    else:
-      return event_settings.get (regform.event, 'user_name')
+  def _get_user_name (self) -> str:
+    return current_plugin.settings.get ('user_name')
 
   def _process_args (self):
     self.token = request.args ['token']
@@ -80,7 +64,7 @@ class RHTransfermovil (RH):
     if (not self.registration):
       raise BadRequest ()
 
-  def _register (self, action, data):
+  def _register (self, action : str, data : str) -> None:
 
     register_transaction (
       action = action,
@@ -92,7 +76,7 @@ class RHTransfermovil (RH):
 
 class RHTransfermovilWithTransaction (RHTransfermovil):
 
-  def _check_nonce (self, salt, nonce):
+  def _check_nonce (self, salt : bytes, nonce : bytes) -> bool:
     pswd = self._gen_nonce_password ()
     algo = PBKDF2HMAC (algorithm = hashes.SHA256 (), length = 128, salt = salt, iterations = 480000)
 
@@ -105,7 +89,7 @@ class RHTransfermovilWithTransaction (RHTransfermovil):
     except InvalidKey:
       return False
 
-  def _has_transaction (self):
+  def _has_transaction (self) -> bool:
 
     transaction = self.registration.transaction
 
@@ -129,12 +113,12 @@ class RHTransfermovilWithTransaction (RHTransfermovil):
 
 class RHTransfermovilWithoutTransaction (RHTransfermovil):
 
-  def _gen_nonce (self, salt):
+  def _gen_nonce (self, salt : bytes) -> str:
     pswd = self._gen_nonce_password ()
     algo = PBKDF2HMAC (algorithm = hashes.SHA256 (), length = 128, salt = salt, iterations = 480000)
     return algo.derive (pswd)
 
-  def _has_not_transaction (self):
+  def _has_not_transaction (self) -> bool:
 
     transaction = self.registration.transaction
 

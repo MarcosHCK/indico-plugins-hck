@@ -1,18 +1,18 @@
-# Copyright 2023 MarcosHCK
-# This file is part of PaymentTransfermovil.
+# Copyright (c) 2023-2025 MarcosHCK
+# This file is part of indico-plugins-hck.
 #
-# PaymentTransfermovil is free software: you can redistribute it and/or modify
+# indico-plugins-hck is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PaymentTransfermovil is distributed in the hope that it will be useful,
+# indico-plugins-hck is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with PaymentTransfermovil. If not, see <http://www.gnu.org/licenses/>.
+# along with indico-plugins-hck. If not, see <http://www.gnu.org/licenses/>.
 #
 from flask_pluginengine import current_plugin
 from indico_payment_transfermovil import _
@@ -35,7 +35,7 @@ class PluginSettingsForm (PaymentPluginSettingsFormBase):
   valid_time = IntegerField (_('Payment valid time'), [DataRequired ()], description = _('Payment valid time (in seconds)'))
 
 class EventSettingsForm (PaymentEventSettingsFormBase):
-  phone_number = StringField (_('Phone number'), [DataRequired ()], description = _('Phone number associated with the bank account'))
+  phone_number = StringField (_('Phone number'), [Optional ()], description = _('Phone number associated with the bank account'))
 
 class TransfermovilPaymentPlugin (PaymentPluginMixin, IndicoPlugin):
   """Transfermovil
@@ -47,8 +47,8 @@ class TransfermovilPaymentPlugin (PaymentPluginMixin, IndicoPlugin):
   settings_form = PluginSettingsForm
   event_settings_form = EventSettingsForm
 
-  default_settings = { 'method_name' : 'Transfermovil', 'phone_number' : '+53 ', 'source_id' : 0, 'user_name' : '', 'url' : '', 'valid_time' : 600, }
-  default_event_settings = { 'enabled' : False, 'method_name' : None, 'phone_number' : None, 'source_id' : None, 'user_name' : None, }
+  default_settings = { 'method_name' : 'Transfermovil', 'phone_number' : '', 'source_id' : 0, 'user_name' : '', 'url' : '', 'valid_time' : 600, }
+  default_event_settings = { 'enabled' : False, 'method_name' : None, 'phone_number' : None, }
 
   def adjust_payment_form_data (self, data):
     registration = data ['registration']
