@@ -55,7 +55,6 @@ class TransfermovilPaymentPlugin (PaymentPluginMixin, IndicoPlugin):
     data ['cancel_url'] = url_for_plugin ('payment_transfermovil.cancel', registration.locator.uuid, _external = True)
     data ['proceed_url'] = url_for_plugin ('payment_transfermovil.proceed', registration.locator.uuid, _external = True)
     data ['status_url'] = url_for_plugin ('payment_transfermovil.status', registration.locator.uuid, _external = True)
-    data ['valid_time'] = current_plugin.settings.get ('valid_time')
 
   def get_blueprints (self):
      return blueprint
