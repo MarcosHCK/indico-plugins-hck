@@ -1,0 +1,3 @@
+graft indico_payment_enzona/static
+graft indico_payment_enzona/templates
+global-exclude *.pyc __pycache__ .keep
