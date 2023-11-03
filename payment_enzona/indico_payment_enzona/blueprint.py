@@ -15,8 +15,17 @@
 # along with indico-plugins-hck. If not, see <http://www.gnu.org/licenses/>.
 #
 from indico.core.plugins import IndicoPluginBlueprint
+from indico_payment_enzona.controllers import RHEnzonaCancel
+from indico_payment_enzona.controllers import RHEnzonaNotify
+from indico_payment_enzona.controllers import RHEnzonaProceed
+from indico_payment_enzona.controllers import RHEnzonaStatus
 
 blueprint = IndicoPluginBlueprint (
   'payment_enzona', __name__,
   url_prefix = '/event/<int:event_id>/registrations/<int:reg_form_id>/payment/enzona'
     )
+
+blueprint.add_url_rule ('/cancel', 'cancel', RHEnzonaCancel, methods = ('POST',))
+blueprint.add_url_rule ('/notify', 'notify', RHEnzonaNotify, methods = ('POST',))
+blueprint.add_url_rule ('/proceed', 'proceed', RHEnzonaProceed, methods = ('POST',))
+blueprint.add_url_rule ('/status', 'status', RHEnzonaStatus, methods = ('GET',))
