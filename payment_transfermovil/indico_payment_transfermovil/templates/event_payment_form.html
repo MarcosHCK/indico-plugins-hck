@@ -27,7 +27,7 @@
           currency : {{ currency | tojson }},
           proceed_url : {{ proceed_url | tojson }},
           status_url : {{ status_url | tojson }},
-          validTime : {{ valid_time | tojson }}
+          validTime : {{ settings.valid_time | tojson }}
         }, document.querySelector ('#transfermovil-area'))
     </script>
   </dl>

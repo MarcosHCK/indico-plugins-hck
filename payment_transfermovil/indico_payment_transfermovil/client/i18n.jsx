@@ -14,6 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with indico-plugins-hck. If not, see <http://www.gnu.org/licenses/>.
  */
-import {bindTranslateComponents} from 'indico/react/i18n'
-export {Singular, Plural, Param} from 'indico/react/i18n'
-export const {Translate, PluralTranslate} = bindTranslateComponents ('payment_transfermovil')
+import { bindTranslateComponents } from 'indico/react/i18n'
+export { Singular, Plural, Param } from 'indico/react/i18n'
+export const { Translate, PluralTranslate } = bindTranslateComponents ('payment_transfermovil')
