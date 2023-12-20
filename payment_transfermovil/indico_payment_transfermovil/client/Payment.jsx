@@ -14,20 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with indico-plugins-hck. If not, see <http://www.gnu.org/licenses/>.
  */
+import 'indico/jquery/utils/errors'
 import 'jquery'
 import { Button } from 'semantic-ui-react'
-import { handleAjaxError } from 'indico/jquery/utils/errors'
 import { makeAsyncDebounce } from 'indico/utils/debounce'
 import { Modal } from 'semantic-ui-react'
 import { QrDialog } from './QrDialog'
 import { Translate } from './i18n'
-import React, { useState } from 'react'
+import React from 'react'
 import ReactDOM from 'react-dom'
 
 export function spawnQrButton (args, container)
 {
+  const checkTimer = makeAsyncDebounce (4000)
   const { amount, cancel_url, csrf_token, currency, proceed_url, status_url, validTime, } = args
-  const [ checkTimer ] = useState (makeAsyncDebounce (4000))
 
   const doFetch = (url, data = {}, silent = false) => new Promise ((resolve, reject) => $.ajax (
     {
