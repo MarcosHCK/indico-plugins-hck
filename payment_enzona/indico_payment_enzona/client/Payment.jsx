@@ -71,7 +71,7 @@ export function spawnQrButton (args, container)
 
   const onQuery = async () =>
     {
-      const json = await doFetch (proceed_url, { amount : amount, currency : currency, })
+      const json = await doFetch (proceed_url, { amount : amount, currency : currency, method: 'qr', })
 
       const divTag = document.createElement ('div')
       const autoCheck = () => { onCheck (false); checkTimer (autoCheck) }
@@ -82,5 +82,15 @@ export function spawnQrButton (args, container)
       checkTimer (autoCheck)
     }
 
-  ReactDOM.render (<Button onClick={() => onQuery ()}><Translate>Query QR</Translate></Button>, container)
+  ReactDOM.render (
+    <>
+      <Button onClick={() => onQuery ()}>
+        <Translate>Pay with QR</Translate>
+      </Button>
+      <a href={proceed_url}>
+        <Button>
+          <Translate>Pay</Translate>
+        </Button>
+      </a>
+    </>, container)
 }
