@@ -4,28 +4,31 @@
     {% trans %}Current currency {{ currency }} is not supported by Enzona services{% endtrans %}
   {% endcall %}
 {% else %}
+  {%- trans p = '<p>' | safe, endp = '</p>' | safe, strong = '<strong>' | safe, endstrong = '</strong>' | safe -%}
+      {{ p }}Click in the {{ strong }}Query QR{{ endstrong }} button to generate a Enzona payment QR{{ endp }}
+  {%- endtrans -%}
+
   <dl class="i-data-list">
     <dt>{% trans %}First name{% endtrans %}</dt>
     <dd>{{ registration.first_name }}</dd>
     <dt>{% trans %}Last name{% endtrans %}</dt>
     <dd>{{ registration.last_name }}</dd>
     <dt>{% trans %}Total amount{% endtrans %}</dt>
-    <dd>{{ format_currency (amount, currency, locale = session.lang) }}</dd>
+    <dd>{{ format_currency(amount, currency, locale = session.lang) }}</dd>
     <dt></dt>
-    <dd>
-      <form action="{{ settings.url }}" method="POST">
-        <input type="hidden" name="amount" value="{{ amount }}">
-        <input type="hidden" name="cancel_url" value="{{ cancel_url }}">
-        <input type="hidden" name="currency" value="{{ currency }}">
-        <input type="hidden" name="invoice_number" value="{{ registration.event_id }}_{{ registration.id }}">
-        <input type="hidden" name="merchant_op_id" value="0">
-        <input type="hidden" name="merchant_uuid" value="{{ settings.merchant_id }}">
-        <input type="hidden" name="return_url" value="{{ return_url }}">
-        <input type="hidden" name="terminal_id" value="0">
-        <input type="hidden" name="username" value="{{ settings.user_name }}">
-        <input type="hidden" name="valid_time" value="{{ settings.valid_time }}">
-        <input type="image" name="submit" alt="Enzona">
-      </form>
+    <dd id="enzona-area">
     </dd>
+    <script>
+      _EnzonaPayment.spawnQrButton (
+        {
+          amount : {{ amount | tojson }},
+          cancel_url : {{ cancel_url | tojson }},
+          csrf_token : {{ session.csrf_token | tojson }},
+          currency : {{ currency | tojson }},
+          proceed_url : {{ proceed_url | tojson }},
+          status_url : {{ status_url | tojson }},
+          validTime : {{ settings.valid_time | tojson }}
+        }, document.querySelector ('#enzona-area'))
+    </script>
   </dl>
 {% endif %}

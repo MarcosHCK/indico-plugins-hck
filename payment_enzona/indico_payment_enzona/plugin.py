@@ -20,6 +20,7 @@ from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.events.payment import PaymentEventSettingsFormBase
 from indico.modules.events.payment import PaymentPluginMixin
 from indico.modules.events.payment import PaymentPluginSettingsFormBase
+from indico.modules.events.payment.views import WPPaymentEvent
 from wtforms.fields import IntegerField, StringField, URLField
 from wtforms.validators import DataRequired, Optional
 
@@ -58,6 +59,7 @@ class EnzonaPaymentPlugin (PaymentPluginMixin, IndicoPlugin):
 
   def init (self):
     super ().init ()
+    self.inject_bundle ('payment.js', WPPaymentEvent)
 
   @property
   def logo_url (self):
