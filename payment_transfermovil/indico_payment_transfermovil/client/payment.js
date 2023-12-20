@@ -15,6 +15,6 @@
  * along with indico-plugins-hck. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import * as TransfermovilPayment from './payment-ui'
+import * as TransfermovilPayment from './Payment'
 
 window._TransfermovilPayment = TransfermovilPayment
