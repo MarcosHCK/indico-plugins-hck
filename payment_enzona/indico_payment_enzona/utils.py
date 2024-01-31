@@ -22,7 +22,9 @@ from os import urandom
 from qrcode.image import svg
 import qrcode
 
-def check_secret (seed: bytes, salt: bytes, secret: bytes) -> bool:
+def check_secret (seed: str, salt: bytes, secret: bytes) -> bool:
+
+  seed = seed.encode ('utf-8')
   algo = PBKDF2HMAC (algorithm = hashes.SHA256 (), length = 128, salt = salt, iterations = 480000)
 
   try:
@@ -55,9 +57,11 @@ def make_salt () -> bytes:
 
   return urandom (16)
 
-def make_secret (seed: bytes, salt: bytes) -> bytes:
+def make_secret (seed: str, salt: bytes) -> bytes:
 
-  return PBKDF2HMAC (algorithm = hashes.SHA256 (), length = 128, salt = salt, iterations = 480000).derive (seed)
+  seed = seed.encode ('utf-8')
+  algo = PBKDF2HMAC (algorithm = hashes.SHA256 (), length = 128, salt = salt, iterations = 480000)
+  return algo.derive (seed)
 
 def serialize_secret (secret: bytes) -> str:
 

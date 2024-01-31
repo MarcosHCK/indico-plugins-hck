@@ -84,10 +84,15 @@ export function spawnQrButton (args, container)
 
   const onQueryUrl = async () =>
     {
-      const wait = IndicoUI.Dialogs.Util.progress ()
-      const json = await doFetch (proceed_url, { amount : amount, currency : currency, method : 'url', }, true)
 
-      location.href = json.redirect_url
+      const waiter = IndicoUI.Dialogs.Util.progress ()
+
+      try
+        {
+          const json = await doFetch (proceed_url, { amount : amount, currency : currency, method : 'url', }, true)
+          location.href = json.redirect_url
+        }
+      catch (e) { waiter () }
     }
 
   ReactDOM.render (

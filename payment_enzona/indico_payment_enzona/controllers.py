@@ -14,12 +14,14 @@
 # You should have received a copy of the GNU General Public License
 # along with indico-plugins-hck. If not, see <http://www.gnu.org/licenses/>.
 #
+from enzona_transfermovil import ApiClient
+from enzona_transfermovil import Configuration
 from enzona_transfermovil import PermiteCrearUnPagoApi
 from enzona_transfermovil.models.payments_post_request import PaymentsPostRequest
 from enzona_transfermovil.models.payments_post_request_items_inner import PaymentsPostRequestItemsInner
 from enzona_transfermovil.models.payments_post200_response import PaymentsPost200Response
 from flask import request
-from flask_pluginengine import url_for_plugin
+from flask_pluginengine import current_plugin, url_for_plugin
 from indico_payment_enzona.rh import RHEnzonaWithoutTransaction
 from indico_payment_enzona.rh import RHEnzonaWithTransaction
 from indico_payment_enzona.utils import check_secret
@@ -41,22 +43,25 @@ class RHEnzonaCancel (RHEnzonaWithTransaction):
     else:
 
       externalid = make_external_id (self.token)
+      secret = request.args.get ('secret')
 
-      if (request.args.get ('secret') == None):
+      if (secret == None):
 
         current_plugin.logger.info ('Payment not recorded because transaction did not sent a valid password header field')
         raise BadRequest ()
+      else:
 
-      salt = deserialize_secret (transaction.data ['salt'])
-      secret = deserialize_secret (request.args.get ('secret'))
+        salt = deserialize_secret (transaction.data ['salt'])
+        secret = deserialize_secret (secret)
 
-      if (not check_secret (externalid, salt, secret)):
+        if (not check_secret (externalid, salt, secret)):
 
-        current_plugin.logger.info ('Payment not recorded because transaction password is invalid')
-        raise BadRequest ()
+          current_plugin.logger.info ('Payment not recorded because transaction password is invalid')
+          raise BadRequest ()
+        else:
 
-      self._register (TransactionAction.reject, {})
-      return { "Success" : True, "Resultmsg" : "OK", "Status" : 1, }
+          self._register (TransactionAction.reject, transaction.data)
+          return { "Success" : True, "Resultmsg" : "OK", "Status" : 1, }
 
 class RHEnzonaNotify (RHEnzonaWithTransaction):
 
@@ -68,51 +73,64 @@ class RHEnzonaNotify (RHEnzonaWithTransaction):
     else:
 
       externalid = make_external_id (self.token)
+      secret = request.args.get ('secret')
 
-      if (request.args.get ('secret') == None):
+      if (secret == None):
 
         current_plugin.logger.info ('Payment not recorded because transaction did not sent a valid password header field')
         raise BadRequest ()
+      else:
 
-      salt = deserialize_secret (transaction.data ['salt'])
-      secret = deserialize_secret (request.args.get ('secret'))
+        salt = deserialize_secret (transaction.data ['salt'])
+        secret = deserialize_secret (secret)
 
-      if (not check_secret (externalid, salt, secret)):
+        if (not check_secret (externalid, salt, secret)):
 
-        current_plugin.logger.info ('Payment not recorded because transaction password is invalid')
-        raise BadRequest ()
+          current_plugin.logger.info ('Payment not recorded because transaction password is invalid')
+          raise BadRequest ()
+        else:
 
-      self._register (TransactionAction.complete, transaction.data)
-      return { "Success" : True, "Resultmsg" : "OK", "Status" : 1, }
+          self._register (TransactionAction.complete, transaction.data)
+          return { "Success" : True, "Resultmsg" : "OK", "Status" : 1, }
 
 class RHEnzonaProceed (RHEnzonaWithoutTransaction):
 
   CSRF_ENABLED = True
 
-  def _process ():
+  def _process (self):
 
     if (not self._has_not_transaction ()):
       current_plugin.logger.info ('Payment not recorded because transaction was not valid')
       raise BadRequest ()
     else:
 
-      if (request.args ['method'] == 'qr'):
+      try:
+
+        method = request.json.get ('method')
+
+      except Exception:
+
+        current_plugin.logger.info ('Payment not recorded because POST data was not valid JSON')
+        raise BadRequest ()
+
+      if (method == 'qr'):
 
         raise Exception ('unimplemented')
       else:
 
         api_token = current_plugin.settings.get ('api_token')
+        base_url = current_plugin.settings.get ('url')
         externalid = make_external_id (self.token)
         merchant_id = current_plugin.settings.get ('merchant_id')
-        password = make_password (self.token)
         user_name = current_plugin.settings.get ('user_name')
         valid_time = current_plugin.settings.get ('valid_time')
 
         salt = make_salt ()
         secret = make_secret (externalid, salt)
 
-        cancel_url = url_for_plugin ('payment_transfermovil.cancel', self.registration.locator.uuid, secret = serialize_secretdeserialize_secret (secret), _external = True)
-        notify_url = url_for_plugin ('payment_transfermovil.notify', self.registration.locator.uuid, secret = serialize_secretdeserialize_secret (secret), _external = True)
+        query = dict (self.registration.locator.uuid, secret = serialize_secret (secret))
+        cancel_url = url_for_plugin ('payment_transfermovil.cancel', **query, _external = True)
+        notify_url = url_for_plugin ('payment_transfermovil.notify', **query, _external = True)
 
         payload = PaymentsPostRequest ()
         item = PaymentsPostRequestItemsInner ()
@@ -137,10 +155,12 @@ class RHEnzonaProceed (RHEnzonaWithoutTransaction):
         payload.valid_time = valid_time
 
         try:
-          headers = { 'Authorize' : f'Bearer {api_token}' }
-          request = PermiteCrearUnPagoApi ()
 
-          response = request.payments_post (payload, headers = headers, _request_auth = 'OAuth2')
+          api_config = Configuration (access_token = api_token, host = base_url)
+          api_client = ApiClient (configuration = api_config)
+          api_endpoint = PermiteCrearUnPagoApi (api_client = api_client)
+
+          response = api_endpoint.payments_post (payload)
 
         except Exception as e:
 
@@ -151,7 +171,7 @@ class RHEnzonaProceed (RHEnzonaWithoutTransaction):
           {
             'created_at' : response.created_at,
             'transaction_uuid' : response.transaction_uuid,
-            'salt' : serialize_secretdeserialize_secret (salt),
+            'salt' : serialize_secret (salt),
             'update_at' : response.update_at,
           }
 
@@ -169,11 +189,17 @@ class RHEnzonaProceed (RHEnzonaWithoutTransaction):
 
         raise InternalServerError ()
 
+  def _process_args (self):
+
+    super ()._process_args ()
+    self.amount = request.json.get ('amount')
+    self.currency = request.json.get ('currency')
+
 class RHEnzonaStatus (RHEnzonaWithTransaction):
 
   CSRF_ENABLED = True
 
-  def _process ():
+  def _process (self):
 
     transaction = self.registration.transaction
 

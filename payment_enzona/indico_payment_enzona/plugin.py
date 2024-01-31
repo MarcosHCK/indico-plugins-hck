@@ -28,12 +28,12 @@ class PluginSettingsForm (PaymentPluginSettingsFormBase):
   url = URLField (_("API Url"), [DataRequired ()], description = _('Enzona REST API Url.'))
   api_token = StringField (_("API Token"), [DataRequired ()], description = _("Enzona REST API Token"))
   merchant_id = StringField (_("Merchant ID"), [DataRequired ()], description = _("Enzona merchant identifier"))
-  phone_number = StringField (_('Phone number'), [DataRequired ()], description = _('Phone number associated with the bank account'))
   user_name = StringField (_('User name'), [DataRequired ()], description = _('Enzona merchant user name'))
   valid_time = IntegerField (_('Valid time'), [DataRequired ()], description = _('Payment valid time (0 for everlasting payments)'))
 
 class EventSettingsForm (PaymentEventSettingsFormBase):
-  phone_number = StringField (_('Phone number'), [Optional ()], description = _('Phone number associated with the bank account'))
+
+  pass
 
 class EnzonaPaymentPlugin (PaymentPluginMixin, IndicoPlugin):
   """Enzona
@@ -45,10 +45,11 @@ class EnzonaPaymentPlugin (PaymentPluginMixin, IndicoPlugin):
   settings_form = PluginSettingsForm
   event_settings_form = EventSettingsForm
 
-  default_settings = { 'method_name' : 'Enzona', 'api_token' : '', 'merchant_id' : '', 'phone_number' : '', 'url' : '', 'user_name' : '', 'valid_time' : 0, }
-  default_event_settings = { 'enabled' : False, 'method_name' : None, 'phone_number' : None, }
+  default_settings = { 'method_name' : 'Enzona', 'api_token' : '', 'merchant_id' : '', 'url' : '', 'user_name' : '', 'valid_time' : 0, }
+  default_event_settings = { 'enabled' : False, 'method_name' : None, }
 
   def adjust_payment_form_data (self, data):
+
     registration = data ['registration']
     data ['cancel_url'] = url_for_plugin ('payment_enzona.cancel', registration.locator.uuid, _external = True)
     data ['proceed_url'] = url_for_plugin ('payment_enzona.proceed', registration.locator.uuid, _external = True)

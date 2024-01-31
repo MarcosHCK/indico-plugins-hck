@@ -24,6 +24,7 @@ from werkzeug.exceptions import BadRequest
 class RHEnzona (RH):
 
   def _process_args (self):
+
     self.token = request.args ['token']
     self.registration = Registration.query.filter_by (uuid = self.token).first ()
 
