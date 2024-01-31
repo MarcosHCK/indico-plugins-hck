@@ -1,0 +1,34 @@
+{% from 'message_box.html' import message_box %}
+{% if currency != 'CUP' and currency != 'CUC' %}
+  {% call message_box ('error') %}
+    {% trans %}Current currency {{ currency }} is not supported by Enzona services{% endtrans %}
+  {% endcall %}
+{% else %}
+  {%- trans p = '<p>' | safe, endp = '</p>' | safe, strong = '<strong>' | safe, endstrong = '</strong>' | safe -%}
+      {{ p }}Select your preferable payment method{{ endp }}
+  {%- endtrans -%}
+
+  <dl class="i-data-list">
+    <dt>{% trans %}First name{% endtrans %}</dt>
+    <dd>{{ registration.first_name }}</dd>
+    <dt>{% trans %}Last name{% endtrans %}</dt>
+    <dd>{{ registration.last_name }}</dd>
+    <dt>{% trans %}Total amount{% endtrans %}</dt>
+    <dd>{{ format_currency(amount, currency, locale = session.lang) }}</dd>
+    <dt></dt>
+    <dd id="enzona-area">
+    </dd>
+    <script>
+      _EnzonaPayment.spawnQrButton (
+        {
+          amount : {{ amount | tojson }},
+          cancel_url : {{ cancel_url | tojson }},
+          csrf_token : {{ session.csrf_token | tojson }},
+          currency : {{ currency | tojson }},
+          proceed_url : {{ proceed_url | tojson }},
+          status_url : {{ status_url | tojson }},
+          validTime : {{ settings.valid_time | tojson }}
+        }, document.querySelector ('#enzona-area'))
+    </script>
+  </dl>
+{% endif %}
