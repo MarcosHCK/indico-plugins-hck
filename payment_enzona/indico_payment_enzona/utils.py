@@ -14,29 +14,51 @@
 # You should have received a copy of the GNU General Public License
 # along with indico-plugins-hck. If not, see <http://www.gnu.org/licenses/>.
 #
-from base64 import b64encode
-from flask_pluginengine import current_plugin
-from indico.modules.events.registration.models.registrations import Registration
+from base64 import b64decode, b64encode
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from io import BytesIO
+from os import urandom
 from qrcode.image import svg
 import qrcode
 
-def generate_qr (data : str) -> str:
+def check_secret (seed: bytes, salt: bytes, secret: bytes) -> bool:
+  algo = PBKDF2HMAC (algorithm = hashes.SHA256 (), length = 128, salt = salt, iterations = 480000)
+
+  try:
+    # Why in the hell this method should raise an
+    # exception if the keys are different?
+    # Exception are exceptional, like a I/O error,
+    # not a return value for God's sake.
+    algo.verify (seed, secret)
+    return True
+
+  except InvalidKey:
+
+    return False
+
+def deserialize_secret (secret: str) -> bytes:
+
+  return b64decode (secret.encode ('utf-8'))
+
+def generate_qr (data: str) -> str:
   stream = BytesIO ()
   generator = qrcode.make (data, image_factory = qrcode.image.svg.SvgPathImage)
   generator.save (stream)
   result = b64encode (stream.getvalue ()).decode ()
   return result
 
-def get_phone_number (registration : Registration) -> str:
-  event = registration.registration_form.event
-  event_settings = current_plugin.event_settings
-  settings = current_plugin.settings
-
-  if (not event_settings.get (event, 'phone_number')):
-    return settings.get ('phone_number')
-  else:
-    return event_settings.get (event, 'phone_number')
-
-def make_external_id (uuid : str) -> str:
+def make_external_id (uuid: str) -> str:
   return f'Indico{{{uuid}}}'
+
+def make_salt () -> bytes:
+
+  return urandom (16)
+
+def make_secret (seed: bytes, salt: bytes) -> bytes:
+
+  return PBKDF2HMAC (algorithm = hashes.SHA256 (), length = 128, salt = salt, iterations = 480000).derive (seed)
+
+def serialize_secret (secret: bytes) -> str:
+
+  return b64encode (secret).decode ('utf-8')
