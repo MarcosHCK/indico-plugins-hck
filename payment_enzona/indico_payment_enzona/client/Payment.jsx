@@ -69,9 +69,9 @@ export function spawnQrButton (args, container)
         }
     }
 
-  const onQuery = async () =>
+  const onQueryQr = async () =>
     {
-      const json = await doFetch (proceed_url, { amount : amount, currency : currency, method: 'qr', })
+      const json = await doFetch (proceed_url, { amount : amount, currency : currency, method : 'qr', })
 
       const divTag = document.createElement ('div')
       const autoCheck = () => { onCheck (false); checkTimer (autoCheck) }
@@ -82,15 +82,21 @@ export function spawnQrButton (args, container)
       checkTimer (autoCheck)
     }
 
+  const onQueryUrl = async () =>
+    {
+      const wait = IndicoUI.Dialogs.Util.progress ()
+      const json = await doFetch (proceed_url, { amount : amount, currency : currency, method : 'url', }, true)
+
+      location.href = json.redirect_url
+    }
+
   ReactDOM.render (
     <>
-      <Button onClick={() => onQuery ()}>
+      <Button onClick={() => onQueryQr ()}>
         <Translate>Pay with QR</Translate>
       </Button>
-      <a href={proceed_url}>
-        <Button>
-          <Translate>Pay</Translate>
-        </Button>
-      </a>
+      <Button onClick={() => onQueryUrl ()}>
+        <Translate>Pay</Translate>
+      </Button>
     </>, container)
 }

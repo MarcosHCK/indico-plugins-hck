@@ -18,7 +18,7 @@ from enzona_transfermovil import PermiteCrearUnPagoApi
 from enzona_transfermovil.models.payments_post_request import PaymentsPostRequest
 from enzona_transfermovil.models.payments_post_request_items_inner import PaymentsPostRequestItemsInner
 from enzona_transfermovil.models.payments_post200_response import PaymentsPost200Response
-from flask import redirect, request
+from flask import request
 from flask_pluginengine import url_for_plugin
 from indico_payment_enzona.rh import RHEnzonaWithoutTransaction
 from indico_payment_enzona.rh import RHEnzonaWithTransaction
@@ -165,7 +165,7 @@ class RHEnzonaProceed (RHEnzonaWithoutTransaction):
             if (str.lower (link.rel) == 'confirm' and str.lower (link.method) == 'redirect'):
 
               self._register (TransactionAction.pending, options)
-              return redirect (link.href)
+              return { 'redirect' : True, 'redirect_url' : link.href }
 
         raise InternalServerError ()
 
